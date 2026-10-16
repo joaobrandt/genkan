@@ -1,4 +1,5 @@
 import './style.css';
+import './row';
 
 function greetingFor(h: number): string {
   if (h < 5) return 'Good night';
@@ -15,6 +16,15 @@ const render = () => {
 
 render();
 setInterval(render, 60_000);
+
+// The layout is drawn for the TV's 1920×1080; scale it to fit any other window.
+const stage = document.getElementById('stage')!;
+const fit = () => {
+  stage.style.setProperty('--fit', String(Math.min(innerWidth / 1920, innerHeight / 1080)));
+};
+
+fit();
+addEventListener('resize', fit);
 
 // Music. If autoplay with sound is refused, the first remote key press starts it.
 const music = document.getElementById('music') as HTMLAudioElement;

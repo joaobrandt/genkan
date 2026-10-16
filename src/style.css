@@ -20,13 +20,24 @@ body {
   user-select: none;
 }
 
-body {
-  display: grid;
-  place-items: center;
+/* The UI is laid out for the TV's 1920×1080 viewport. main.ts scales this stage to fit
+   any other window (the dev server in a desktop browser), so it looks the same there. */
+#stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
 }
 
-/* Centred greeting, in 64px Inter Light. */
+/* Greeting, centred in the top half, in 64px Inter Light. */
 #greeting {
+  position: absolute;
+  inset: 0 0 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   font-size: 64px;
   font-weight: 300;
@@ -45,4 +56,95 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* PS4-style row in the bottom half. row.ts places each tile with a transform: the
+   selected one at full size on the row's left edge, the rest scaled down beside it. */
+#row {
+  position: absolute;
+  left: 116px; /* the previous tile (200px, 16px gap) shows exactly half of itself */
+  top: 680px; /* tiles are centred on y = 810, the middle of the bottom half */
+}
+
+.tile {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.8);
+  transform-origin: left center; /* scaled tiles keep the row's middle line */
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.3s;
+}
+
+/* blue wash over the previous tile, deepest at the screen edge */
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgb(16 52 140 / 0.95) 50%, rgb(16 52 140 / 0.35));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* faint ring so dark icons (Apple TV) still have an edge on the black sky */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile.selected {
+  box-shadow:
+    0 0 0 4px #fff,
+    0 18px 48px -12px rgb(0 0 0 / 0.9);
+}
+.tile.previous::before {
+  opacity: 1;
+}
+/* tiles further back slide off and fade */
+.tile.passed {
+  opacity: 0;
+}
+.tile.launching img {
+  animation: press 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes press {
+  40% {
+    transform: scale(0.92);
+  }
+}
+
+/* Selected tile's name under it, and a line for launch errors under that. */
+#title,
+#status {
+  position: absolute;
+  left: 116px;
+  margin: 0;
+}
+
+#title {
+  top: 964px;
+  font-size: 32px;
+  font-weight: 400;
+  color: rgb(255 255 255 / 0.95);
+}
+
+#status {
+  top: 1014px;
+  font-size: 20px;
+  color: rgb(255 255 255 / 0.55);
 }

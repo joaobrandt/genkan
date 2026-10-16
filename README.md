@@ -4,10 +4,13 @@ A minimal home screen for LG webOS TVs. *Genkan* is the entryway of a Japanese
 house — the first place you step into before any room — and 玄 also means
 "dark", which suits a screen that's mostly true OLED black.
 
-Right now it's a single screen: a time-of-day greeting centred on black, with
-Holst's [Venus, the Bringer of
+It's a single screen on black, with Holst's [Venus, the Bringer of
 Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg) (U.S. Air Force
-Heritage of America Band, public domain) looping underneath.
+Heritage of America Band, public domain) looping underneath: a time-of-day
+greeting in the top half, and a PS4-style row of the HDMI inputs, apps and the
+TV's settings in the bottom half. Left and Right slide the row under the
+selected tile, which stays on the left; OK opens it. The row is a fixed list in
+`src/tiles.ts`.
 
 > Targets **webOS 24 / Chromium 108** on a rooted TV.
 
@@ -15,7 +18,7 @@ Heritage of America Band, public domain) looping underneath.
 
 ```sh
 npm install
-npm run dev      # http://localhost:5173 — size the window to 1920×1080
+npm run dev   # http://localhost:5173 — size the window to 1920×1080
 ```
 
 ## Deploy

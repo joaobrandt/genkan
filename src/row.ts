@@ -1,0 +1,75 @@
+import {TILES} from './tiles';
+import {launchApp} from './luna';
+
+// PS4-style row: the selected tile stays put at the row's left edge, larger than the
+// rest, and Left/Right slide the whole row under it. The tile before it peeks in,
+// half off-screen. Tiles are absolutely positioned and moved with transforms only,
+// so a step never triggers layout on the TV.
+const SIZE = 260; // selected tile, px — others are drawn at SMALL of this
+const SMALL = 200 / SIZE;
+const GAP = 16;
+const PITCH = SIZE * SMALL + GAP;
+const GROW = SIZE - SIZE * SMALL; // how much further the tiles after the selected one sit
+
+const row = document.getElementById('row')!;
+const title = document.getElementById('title')!;
+const status = document.getElementById('status')!;
+
+const tiles = TILES.map((t) => {
+  const el = document.createElement('div');
+  el.className = 'tile';
+  const img = document.createElement('img');
+  img.src = t.icon;
+  img.alt = '';
+  el.append(img);
+  row.append(el);
+  return el;
+});
+
+let selected = 0;
+let statusTimer = 0;
+
+function render() {
+  tiles.forEach((el, i) => {
+    const x = (i - selected) * PITCH + (i > selected ? GROW : 0);
+    el.style.transform = `translateX(${x}px) scale(${i === selected ? 1 : SMALL})`;
+    el.classList.toggle('selected', i === selected);
+    el.classList.toggle('previous', i === selected - 1);
+    el.classList.toggle('passed', i < selected - 1);
+  });
+  title.textContent = TILES[selected].title;
+}
+
+function select(i: number) {
+  const next = Math.max(0, Math.min(TILES.length - 1, i));
+  if (next === selected) return;
+  selected = next;
+  status.textContent = '';
+  render();
+}
+
+function launch() {
+  const tile = TILES[selected];
+  const el = tiles[selected];
+  el.classList.remove('launching');
+  void el.offsetWidth; // restart the press animation
+  el.classList.add('launching');
+  launchApp(tile.id).catch((err: Error) => {
+    status.textContent = `Couldn't open ${tile.title}: ${err.message}`;
+    clearTimeout(statusTimer);
+    statusTimer = window.setTimeout(() => {
+      status.textContent = '';
+    }, 4000);
+  });
+}
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') select(selected + 1);
+  else if (e.key === 'ArrowLeft') select(selected - 1);
+  else if (e.key === 'Enter') {
+    if (!e.repeat) launch();
+  } else return;
+  e.preventDefault();
+});
+
+render();

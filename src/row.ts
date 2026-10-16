@@ -1,5 +1,5 @@
 import {TILES} from './tiles';
-import {launchApp} from './luna';
+import {connectedInputs, launchApp} from './luna';
 
 // PS4-style row: the selected tile stays put at the row's left edge, larger than the
 // rest, and Left/Right slide the whole row under it. The tile before it peeks in,
@@ -22,7 +22,9 @@ const tiles = TILES.map((t) => {
   const img = document.createElement('img');
   img.src = t.icon;
   img.alt = '';
-  el.append(img);
+  const dot = document.createElement('span'); // lit while a device is on at this input
+  dot.className = 'dot';
+  el.append(img, dot);
   row.append(el);
   return el;
 });
@@ -84,6 +86,21 @@ function launch() {
     }
   );
 }
+
+// Light the dot on the inputs whose device is on: when genkan comes up and every few seconds
+// while it's in view, so a console switched on shows up soon after.
+async function refreshInputs() {
+  const live = await connectedInputs();
+  tiles.forEach((el, i) => el.classList.toggle('live', live.has(TILES[i].id)));
+}
+
+refreshInputs();
+setInterval(() => {
+  if (!document.hidden) refreshInputs();
+}, 10_000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshInputs();
+});
 
 addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') select(selected + 1);

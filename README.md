@@ -13,7 +13,8 @@ Heritage of America Band, public domain) looping underneath. The date and time
 sit in the top right corner, and a PS4-style row of the HDMI inputs, apps and
 the TV's settings in the bottom half. Left and Right slide the row under the
 selected tile, which stays on the left; OK opens it, and genkan starts on the
-tile opened last. The row is a fixed list in `src/tiles.ts`.
+tile opened last. The row is a fixed list in `src/tiles.ts`. A green dot on an
+input tile means the TV sees a device on at that HDMI port.
 
 After two minutes without input genkan becomes a screensaver: the clock, the row
 and the music fade away and only the sky keeps turning. The next key press brings

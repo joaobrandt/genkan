@@ -130,6 +130,26 @@ body {
   object-fit: cover;
 }
 
+/* a device is on at this input (row.ts asks the TV) */
+.tile .dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow:
+    0 0 0 3px rgb(0 0 0 / 0.45),
+    0 0 12px rgb(74 222 128 / 0.6);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tile.live .dot {
+  opacity: 1;
+}
+
 /* not full white: it's always on the same spot */
 .tile.selected {
   box-shadow:

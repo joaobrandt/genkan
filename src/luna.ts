@@ -19,7 +19,11 @@ interface Reply {
 }
 
 // One request, one reply: the bridge is cancelled as soon as it answers.
-function call(uri: string, params: object, Bridge: {new (): PalmBridge}): Promise<Reply> {
+function call<T extends Reply = Reply>(
+  uri: string,
+  params: object,
+  Bridge: {new (): PalmBridge}
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const bridge = new Bridge();
     const timer = setTimeout(() => reject(new Error('a TV não respondeu')), 4000);
@@ -30,7 +34,7 @@ function call(uri: string, params: object, Bridge: {new (): PalmBridge}): Promis
       } catch {
         /* noop */
       }
-      let res: Reply = {};
+      let res = {} as T;
       try {
         res = JSON.parse(msg);
       } catch {
@@ -53,6 +57,24 @@ export async function launchApp(id: string): Promise<void> {
 
   const res = await call('luna://com.webos.applicationManager/launch', {id}, Bridge);
   if (!res.returnValue) throw new Error(res.errorText || 'falha ao abrir');
+}
+
+/** App IDs of the inputs with a device on the other end, from the TV's external input
+ *  manager: undocumented, but open to web apps. Empty when the TV doesn't answer. */
+export async function connectedInputs(): Promise<Set<string>> {
+  const Bridge = window.PalmServiceBridge;
+  if (!Bridge) return new Set(['com.webos.app.hdmi1']); // off webOS: a PS5 that's on, to see the dot
+
+  try {
+    const res = await call<Reply & {devices?: {appId?: string; connected?: boolean}[]}>(
+      'luna://com.webos.service.eim/getAllInputStatus',
+      {},
+      Bridge
+    );
+    return new Set((res.devices || []).filter((d) => d.connected && d.appId).map((d) => d.appId!));
+  } catch {
+    return new Set();
+  }
 }
 
 /** Switch the panel off or back on, leaving the TV and genkan running. Goes through genkan's

@@ -1,19 +1,19 @@
 // genkan's launcher service. Being a registered dev-mode webOS service is what lets it call
-// applicationManager/launch, which a bare script can't. It lives in the app package, touches
-// no OS files, and only reads the remote — it never grabs it.
+// applicationManager/launch, which a bare script can't. It lives in the app package and
+// touches no OS files.
 //
 // Flags:
 //   --boot   launch genkan on start, retrying until the app manager is ready. autostart.sh
 //            passes it at boot, so the TV comes up in genkan.
-//   --watch  also watch the remote, and launch genkan whenever HOME is pressed.
+//   --watch  also watch the app in front, and put genkan in place of LG's home whenever it
+//            comes up (on HOME, or when an app closes back to it).
 var Service = require('webos-service');
 var fs = require('fs');
 var exec = require('child_process').exec;
+var spawn = require('child_process').spawn;
 
 var APP_ID = 'ws.brandt.genkan';
-var HOME_CODE = 773; // HOME on this TV's Magic Remote
-var EV_KEY = 1;
-var EVENT_SIZE = 16; // 32-bit input_event
+var LG_HOME = 'com.webos.app.home';
 var LOG = '/tmp/genkan-svc.log';
 var ARGS = process.argv.slice(2);
 
@@ -76,49 +76,48 @@ function bootLaunch(attempt) {
   });
 }
 
-// Watch every input device for HOME, so it doesn't matter which one the remote turns up as.
-// The fds are non-blocking and polled from one timer: a blocking read per device would pin a
-// libuv thread each, and with ~32 input nodes the 4-thread pool runs out before the device
-// that carries HOME ever gets read.
-function watchHome() {
-  var fds = [];
-  try {
-    fs.readdirSync('/dev/input').forEach(function (f) {
-      if (f.indexOf('event') !== 0) return;
+// LG's home comes to the front on HOME a beat after the key, so launching genkan on the key
+// itself only flashes it before LG's home covers it. Follow the app in front instead, and
+// replace LG's home as soon as it gets there. The foreground updates are only open to root, so
+// they come through luna-send. If the TV keeps bringing LG's home back, let it be rather than
+// fight it in a loop.
+function replaceLgHome() {
+  var p = spawn(
+    '/usr/bin/luna-send',
+    ['-i', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{"subscribe":true}'],
+    {stdio: ['ignore', 'pipe', 'ignore']}
+  );
+  var buf = '';
+  var recent = []; // when genkan last took LG home's place
+  p.stdout.on('data', function (chunk) {
+    buf += chunk;
+    var lines = buf.split('\n');
+    buf = lines.pop();
+    lines.forEach(function (line) {
+      var m;
       try {
-        fds.push(fs.openSync('/dev/input/' + f, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK));
+        m = JSON.parse(line);
       } catch (e) {
-        /* unreadable node — skip it */
+        return;
       }
+      if (m.appId !== LG_HOME) return;
+      var now = Date.now();
+      recent = recent.filter(function (t) {
+        return now - t < 3000;
+      });
+      if (recent.length >= 6) {
+        log('LG home keeps coming back; leaving it');
+        return;
+      }
+      recent.push(now);
+      launch('over LG home');
     });
-  } catch (e) {
-    log('readdir /dev/input: ' + e.message);
-    return;
-  }
-  log('watching ' + fds.length + ' input devices');
-
-  var buf = Buffer.alloc(EVENT_SIZE * 64);
-  var last = 0;
-  setInterval(function () {
-    for (var i = 0; i < fds.length; i++) {
-      var bytes = 0;
-      try {
-        bytes = fs.readSync(fds[i], buf, 0, buf.length, null);
-      } catch (e) {
-        continue; // EAGAIN: nothing waiting on this device
-      }
-      for (var off = 0; off + EVENT_SIZE <= bytes; off += EVENT_SIZE) {
-        var home =
-          buf.readUInt16LE(off + 8) === EV_KEY &&
-          buf.readUInt16LE(off + 10) === HOME_CODE &&
-          buf.readInt32LE(off + 12) === 1;
-        if (home && Date.now() - last > 800) {
-          last = Date.now();
-          launch('home key');
-        }
-      }
-    }
-  }, 16);
+  });
+  p.on('exit', function (code) {
+    log('foreground watch ended (' + code + '), restarting');
+    setTimeout(replaceLgHome, 2000);
+  });
+  log('watching for LG home');
 }
 
 // Waking from standby doesn't run the boot hook again, but this process is only frozen while
@@ -143,4 +142,4 @@ if (ARGS.indexOf('--boot') !== -1)
   setTimeout(function () {
     bootLaunch(1);
   }, 1000);
-if (ARGS.indexOf('--watch') !== -1) watchHome();
+if (ARGS.indexOf('--watch') !== -1) replaceLgHome();

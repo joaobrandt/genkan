@@ -62,8 +62,10 @@ without touching any OS files:
 
 - **A launcher service** in the app package ([`service/service.js`](service/service.js)).
   Being a registered webOS service is what lets it launch apps. It launches
-  genkan at boot (retrying until the app manager is ready), again whenever the
-  remote's HOME key (code `773`) is pressed, and again on waking from standby.
+  genkan at boot (retrying until the app manager is ready) and on waking from
+  standby, and puts it in place of LG's home whenever that comes to the front:
+  on HOME, or when an app closes back to it. (Launching on the HOME key itself
+  doesn't work: LG's home arrives a beat later and covers genkan.)
 - **A boot hook**: `npm run deploy` links [`service/autostart.sh`](service/autostart.sh)
   into the Homebrew Channel's `/var/lib/webosbrew/init.d/` as `50-genkan`, which
   starts the service at every cold boot. Deploying also runs it straight away,

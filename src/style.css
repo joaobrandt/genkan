@@ -52,7 +52,7 @@ body {
   top: 72px;
   right: 116px;
   text-align: right;
-  animation: rise-in 0.7s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s both;
+  animation: rise-in 0.7s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s backwards; /* not both: the screensaver fades it later */
 }
 
 #date,
@@ -169,4 +169,43 @@ body {
   top: 1014px;
   font-size: 20px;
   color: rgb(255 255 255 / 0.55);
+}
+
+/* Screensaver (screensaver.ts): with body.idle the clock floats up and the row sinks, both
+   fading slowly until only the sky is left. Waking brings them back quicker, the clock a
+   beat before the row and the row a beat before its title. */
+#clock,
+#row,
+#title,
+#status {
+  transition:
+    opacity 0.9s cubic-bezier(0.05, 0.7, 0.1, 1),
+    translate 0.9s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+#row {
+  transition-delay: 0.1s;
+}
+#title,
+#status {
+  transition-delay: 0.2s;
+}
+
+.idle #clock,
+.idle #row,
+.idle #title,
+.idle #status {
+  opacity: 0;
+  transition-duration: 3s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+}
+
+.idle #clock {
+  translate: 0 -20px;
+}
+.idle #row,
+.idle #title,
+.idle #status {
+  translate: 0 32px;
 }

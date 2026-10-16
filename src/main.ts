@@ -1,4 +1,5 @@
 import './style.css';
+import './sky';
 import './row';
 
 function greetingFor(h: number): string {

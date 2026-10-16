@@ -20,6 +20,20 @@ body {
   user-select: none;
 }
 
+/* Night sky, generated and drawn by sky.ts; it fades in once it's ready. */
+#sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+#sky.ready {
+  opacity: 1;
+}
+
 /* The UI is laid out for the TV's 1920×1080 viewport. main.ts scales this stage to fit
    any other window (the dev server in a desktop browser), so it looks the same there. */
 #stage {
@@ -31,7 +45,8 @@ body {
   transform: translate(-50%, -50%) scale(var(--fit, 1));
 }
 
-/* Greeting, centred in the top half, in 64px Inter Light. */
+/* Greeting, centred in the top half, in 64px Inter Light.
+   Everything below is positioned, so it all paints over the fixed sky. */
 #greeting {
   position: absolute;
   inset: 0 0 50%;

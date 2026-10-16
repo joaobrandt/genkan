@@ -1,10 +1,11 @@
 import {cloud, milkyWay, random} from './nebula';
+import {moonPhase, moonSprite} from './moon';
 
 // Night sky behind the UI, drawn at runtime on one canvas. A Milky Way texture and a layer of
 // stars, small nebulae and distant galaxies are generated once per launch (a new sky each
 // time) and turn around the screen's centre; brighter stars twinkle on top, and every few
-// seconds a shooting star crosses. The turn also keeps any one pixel from staying lit for
-// long, which the OLED panel likes.
+// seconds a shooting star crosses. Tonight's moon turns with them. The turn also keeps any
+// one pixel from staying lit for long, which the OLED panel likes.
 
 const TURN_MS = 9 * 60_000; // one full turn of the sky
 const MILKY_WAY_PX = 384; // Milky Way texture size — it's soft, so it's upscaled
@@ -13,6 +14,9 @@ const CLOUDS = 5; // faint nebulae, 300–600px across
 const STAR_AREA = 400; // one faint star per this many px²
 const BRIGHT_AREA = 11_000; // one twinkling star per this many px²
 const METEOR_MS = [3_000, 9_000]; // time between shooting stars
+const MOON_R = 20; // the moon's radius, px
+const MOON_ALPHA = 0.85; // kept a little dim
+const MOON_MS = 60 * 60_000; // redrawn this often, as its phase creeps on
 const TINTS = [
   [207, 220, 255],
   [255, 255, 255],
@@ -54,6 +58,10 @@ let sprites: HTMLCanvasElement[] = [];
 let bright: Star[] = [];
 let meteor: Meteor | null = null;
 let nextMeteor = 0;
+let moon: HTMLCanvasElement | null = null;
+let moonX = 0,
+  moonY = 0,
+  moonAt = -Infinity;
 
 function layer(w: number, h = w): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');
@@ -247,6 +255,13 @@ function build() {
   }
   starLayer = stars;
 
+  // the moon circles the centre close enough to stay on screen all the way round
+  const ma = rand() * TAU,
+    mr = Math.min(W, H) * (0.2 + rand() * 0.18);
+  moonX = S / 2 + Math.cos(ma) * mr;
+  moonY = S / 2 + Math.sin(ma) * mr;
+  moonAt = -Infinity; // redraw it at this size
+
   sprites = TINTS.map(sprite);
   bright = Array.from({length: Math.round((S * S) / BRIGHT_AREA)}, () => ({
     x: rand() * S,
@@ -326,6 +341,16 @@ function frame(t: number) {
   for (const s of bright) {
     ctx.globalAlpha = s.base * (0.6 + 0.4 * Math.sin(t * s.speed + s.phase));
     ctx.drawImage(s.sprite, s.x - s.size / 2, s.y - s.size / 2, s.size, s.size);
+  }
+
+  if (Date.now() - moonAt > MOON_MS) {
+    moon = moonSprite(MOON_R * dpr, moonPhase(new Date()));
+    moonAt = Date.now();
+  }
+  if (moon) {
+    ctx.globalCompositeOperation = 'source-over'; // over the stars, hiding those behind it
+    ctx.globalAlpha = MOON_ALPHA;
+    ctx.drawImage(moon, moonX - 2 * MOON_R, moonY - 2 * MOON_R, 4 * MOON_R, 4 * MOON_R);
   }
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

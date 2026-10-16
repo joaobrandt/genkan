@@ -17,7 +17,10 @@ function glide(to: number, ms: number, done?: () => void) {
   const from = audio.volume,
     start = performance.now();
   const step = (t: number) => {
-    const k = Math.min(1, (t - start) / ms);
+    // t is when the frame began, which can be a moment before `start` (right after the page
+    // resumes, say): unclamped, k goes negative, the volume leaves 0–1 and setting it throws,
+    // which stops the glide for good.
+    const k = Math.max(0, Math.min(1, (t - start) / ms));
     audio.volume = from + (to - from) * k;
     if (k < 1) ramp = requestAnimationFrame(step);
     else done?.();

@@ -2,6 +2,7 @@ import './style.css';
 import './sky';
 import './row';
 import './screensaver';
+import './weather';
 import {isNight} from './night';
 import {retune} from './music';
 

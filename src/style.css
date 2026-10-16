@@ -47,8 +47,9 @@ body {
     translate(var(--shift-x, 0px), var(--shift-y, 0px));
 }
 
-/* Date with the time under it, in the top right corner, inset as far as the row is from
-   the left. Everything below is positioned, so it all paints over the fixed sky. */
+/* Date with the time and the weather under it, in the top right corner, inset as far as
+   the row is from the left. Everything below is positioned, so it all paints over the
+   fixed sky. */
 #clock {
   position: absolute;
   top: 72px;
@@ -58,7 +59,8 @@ body {
 }
 
 #date,
-#time {
+#time,
+#weather {
   margin: 0;
   font-size: 26px;
   font-weight: 700;
@@ -69,6 +71,14 @@ body {
 #time {
   margin-top: 8px;
   font-variant-numeric: tabular-nums; /* digits don't shift as the minutes turn */
+}
+
+#weather {
+  margin-top: 8px;
+}
+/* no place set, or no reading yet */
+#weather:empty {
+  display: none;
 }
 
 @keyframes rise-in {
@@ -196,7 +206,8 @@ body {
 
 /* Night (night.ts): dimmer text and tiles, as the room is likely dark. */
 .night #date,
-.night #time {
+.night #time,
+.night #weather {
   color: rgb(255 255 255 / 0.35);
 }
 .night #title {

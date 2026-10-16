@@ -9,12 +9,12 @@ stars, a Milky Way band with dust lanes, faint nebulae and a few distant spiral,
 elliptical and edge-on galaxies, turning, with twinkling stars and shooting
 stars every few seconds — and Holst's [Venus, the Bringer of
 Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg) (U.S. Air Force
-Heritage of America Band, public domain) looping underneath. The date and time
-sit in the top right corner, and a PS4-style row of the HDMI inputs, apps and
-the TV's settings in the bottom half. Left and Right slide the row under the
-selected tile, which stays on the left; OK opens it, and genkan starts on the
-tile opened last. The row is a fixed list in `src/tiles.ts`. A green dot on an
-input tile means the TV sees a device on at that HDMI port.
+Heritage of America Band, public domain) looping underneath. The date, time and
+weather sit in the top right corner, and a PS4-style row of the HDMI inputs,
+apps and the TV's settings in the bottom half. Left and Right slide the row
+under the selected tile, which stays on the left; OK opens it, and genkan starts
+on the tile opened last. The row is a fixed list in `src/tiles.ts`. A green dot
+on an input tile means the TV sees a device on at that HDMI port.
 
 After two minutes without input genkan becomes a screensaver: the clock, the row
 and the music fade away and only the sky keeps turning. The next key press brings
@@ -32,6 +32,14 @@ third of its volume, and the screensaver after 45 seconds instead of two minutes
 ```sh
 npm install
 npm run dev   # http://localhost:5173 — the layout scales to fit any window
+```
+
+The weather ([Open-Meteo](https://open-meteo.com), no account needed) is for the
+place set in `.env`, read at build time; without it the weather line stays hidden:
+
+```sh
+VITE_LAT=-23.55
+VITE_LON=-46.63
 ```
 
 ## Deploy

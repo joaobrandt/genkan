@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.ipk
+
+# editor / OS
+.DS_Store
+
+# local env overrides
+.env

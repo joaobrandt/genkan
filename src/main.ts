@@ -15,3 +15,18 @@ const render = () => {
 
 render();
 setInterval(render, 60_000);
+
+// Music. If autoplay with sound is refused, the first remote key press starts it.
+const music = document.getElementById('music') as HTMLAudioElement;
+const play = () => {
+  music.play().catch(() => {
+    /* blocked until a key press */
+  });
+};
+
+play();
+addEventListener('keydown', play);
+// Don't play under other apps — pause when genkan goes to the background.
+document.addEventListener('visibilitychange', () => {
+  document.hidden ? music.pause() : play();
+});

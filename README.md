@@ -4,7 +4,10 @@ A minimal home screen for LG webOS TVs. *Genkan* is the entryway of a Japanese
 house — the first place you step into before any room — and 玄 also means
 "dark", which suits a screen that's mostly true OLED black.
 
-Right now it's a single screen: a time-of-day greeting centred on black.
+Right now it's a single screen: a time-of-day greeting centred on black, with
+Holst's [Venus, the Bringer of
+Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg) (U.S. Air Force
+Heritage of America Band, public domain) looping underneath.
 
 > Targets **webOS 24 / Chromium 108** on a rooted TV.
 

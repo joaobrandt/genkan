@@ -1,6 +1,7 @@
 import {fadeIn, fadeOut, stop} from './music';
 import {blockScreenSaver, onScreenOn, setScreen} from './luna';
 import {setSkyRunning} from './sky';
+import {shift} from './shift';
 
 // After a while with no input genkan turns screensaver: the clock and the row drift off and
 // fade, the music fades out, and only the sky keeps turning (styles under body.idle). Any
@@ -9,17 +10,20 @@ import {setSkyRunning} from './sky';
 // the best rest an OLED can get; the TV stays on and any key lights it again.
 const IDLE_MS = 2 * 60_000;
 const DARK_MS = 30 * 60_000; // asleep this long, then the panel goes off
+const FADE_MS = 3_000; // how long the UI takes to fade out (style.css)
 
 let idle = false;
 let dark = false;
 let timer = 0;
 let darkTimer = 0;
+let shiftTimer = 0;
 
 function sleep() {
   idle = true;
   document.body.classList.add('idle');
   fadeOut();
   darkTimer = window.setTimeout(darken, DARK_MS);
+  shiftTimer = window.setTimeout(shift, FADE_MS); // once it's out of sight
 }
 
 function darken() {
@@ -31,6 +35,7 @@ function darken() {
 function wake() {
   idle = false;
   clearTimeout(darkTimer);
+  clearTimeout(shiftTimer);
   if (dark) {
     dark = false;
     setSkyRunning(true);
@@ -87,6 +92,7 @@ document.addEventListener('visibilitychange', () => {
     clearTimeout(timer);
     clearTimeout(darkTimer);
     stop();
+    shift();
   } else {
     activity();
     fadeIn(); // stop() paused it, whether or not genkan had gone idle first

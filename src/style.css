@@ -35,14 +35,16 @@ body {
 }
 
 /* The UI is laid out for the TV's 1920×1080 viewport. main.ts scales this stage to fit
-   any other window (the dev server in a desktop browser), so it looks the same there. */
+   any other window (the dev server in a desktop browser), so it looks the same there, and
+   shift.ts nudges it a few px now and then against burn-in. */
 #stage {
   position: absolute;
   left: 50%;
   top: 50%;
   width: 1920px;
   height: 1080px;
-  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform: translate(-50%, -50%) scale(var(--fit, 1))
+    translate(var(--shift-x, 0px), var(--shift-y, 0px));
 }
 
 /* Date with the time under it, in the top right corner, inset as far as the row is from
@@ -128,9 +130,10 @@ body {
   object-fit: cover;
 }
 
+/* not full white: it's always on the same spot */
 .tile.selected {
   box-shadow:
-    0 0 0 4px #fff,
+    0 0 0 4px rgb(255 255 255 / 0.85),
     0 18px 48px -12px rgb(0 0 0 / 0.9);
 }
 .tile.previous::before {

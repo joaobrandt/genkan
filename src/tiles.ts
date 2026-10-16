@@ -10,6 +10,7 @@ export const TILES: Tile[] = [
   {id: 'com.webos.app.hdmi2', title: 'Nintendo Switch 2', icon: 'icons/nsw2.png'},
   {id: 'com.webos.app.hdmi3', title: 'TV', icon: 'icons/tv.svg'},
   {id: 'youtube.leanback.v4', title: 'YouTube', icon: 'icons/youtube.png'},
+  {id: 'org.litefin.app', title: 'Jellyfin', icon: 'icons/jellyfin.svg'}, // the Litefin client; icon CC BY-SA 4.0
   {id: 'com.disney.disneyplus-prod', title: 'Disney+', icon: 'icons/disney.png'},
   {id: 'amazon', title: 'Prime Video', icon: 'icons/prime.png'},
   {id: 'com.apple.appletv', title: 'Apple TV', icon: 'icons/appletv.svg'},

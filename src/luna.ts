@@ -59,19 +59,23 @@ export async function launchApp(id: string): Promise<void> {
   if (!res.returnValue) throw new Error(res.errorText || 'falha ao abrir');
 }
 
-/** App IDs of the inputs with a device on the other end, from the TV's external input
- *  manager: undocumented, but open to web apps. Empty when the TV doesn't answer. */
-export async function connectedInputs(): Promise<Set<string>> {
+/** App IDs of the inputs with a signal, i.e. a device that's on, from the TV's external input
+ *  manager: undocumented, but open to web apps. Its `connected` is true even for an empty port,
+ *  and `hdmiPlugIn` for a console in rest mode, so it's `hdmiSignalExist` that tells. Empty
+ *  when the TV doesn't answer. */
+export async function liveInputs(): Promise<Set<string>> {
   const Bridge = window.PalmServiceBridge;
   if (!Bridge) return new Set(['com.webos.app.hdmi1']); // off webOS: a PS5 that's on, to see the dot
 
   try {
-    const res = await call<Reply & {devices?: {appId?: string; connected?: boolean}[]}>(
+    const res = await call<Reply & {devices?: {appId?: string; hdmiSignalExist?: boolean}[]}>(
       'luna://com.webos.service.eim/getAllInputStatus',
       {},
       Bridge
     );
-    return new Set((res.devices || []).filter((d) => d.connected && d.appId).map((d) => d.appId!));
+    return new Set(
+      (res.devices || []).filter((d) => d.hdmiSignalExist && d.appId).map((d) => d.appId!)
+    );
   } catch {
     return new Set();
   }

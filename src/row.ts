@@ -1,5 +1,5 @@
 import {TILES} from './tiles';
-import {connectedInputs, launchApp} from './luna';
+import {launchApp, liveInputs} from './luna';
 
 // PS4-style row: the selected tile stays put at the row's left edge, larger than the
 // rest, and Left/Right slide the whole row under it. The tile before it peeks in,
@@ -90,7 +90,7 @@ function launch() {
 // Light the dot on the inputs whose device is on: when genkan comes up and every few seconds
 // while it's in view, so a console switched on shows up soon after.
 async function refreshInputs() {
-  const live = await connectedInputs();
+  const live = await liveInputs();
   tiles.forEach((el, i) => el.classList.toggle('live', live.has(TILES[i].id)));
 }
 

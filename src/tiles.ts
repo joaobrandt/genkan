@@ -14,5 +14,5 @@ export const TILES: Tile[] = [
   {id: 'amazon', title: 'Prime Video', icon: 'icons/prime.png'},
   {id: 'com.apple.appletv', title: 'Apple TV', icon: 'icons/appletv.svg'},
   {id: 'org.webosbrew.hbchannel', title: 'Homebrew Channel', icon: 'icons/homebrew.svg'}, // webosbrew, MIT
-  {id: 'com.palm.app.settings', title: 'Settings', icon: 'icons/settings.svg'}
+  {id: 'com.palm.app.settings', title: 'Configurações', icon: 'icons/settings.svg'}
 ];

@@ -2,21 +2,55 @@ import './style.css';
 import './sky';
 import './row';
 
-function greetingFor(h: number): string {
-  if (h < 5) return 'Good night';
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  if (h < 22) return 'Good evening';
-  return 'Good night';
+const WEEKDAYS = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado'
+];
+const MONTHS = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro'
+];
+
+// "Sexta-feira, 16 de Outubro de 2026". Spelled out by hand rather than with Intl, so it
+// doesn't depend on the TV's browser carrying pt-BR locale data.
+function dateLine(d: Date): string {
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} de ${MONTHS[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
-const greeting = document.getElementById('greeting')!;
+// "10:42"
+function timeLine(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+const date = document.getElementById('date')!;
+const time = document.getElementById('time')!;
 const render = () => {
-  greeting.textContent = greetingFor(new Date().getHours());
+  const now = new Date();
+  date.textContent = dateLine(now);
+  time.textContent = timeLine(now);
+};
+// on every minute boundary, so the clock turns over on time
+const tick = () => {
+  render();
+  setTimeout(tick, 60_000 - (Date.now() % 60_000));
 };
 
-render();
-setInterval(render, 60_000);
+tick();
 
 // The layout is drawn for the TV's 1920×1080; scale it to fit any other window.
 const stage = document.getElementById('stage')!;

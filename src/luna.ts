@@ -25,7 +25,7 @@ export function launchApp(id: string): Promise<void> {
     }
 
     const bridge = new Bridge();
-    const timer = setTimeout(() => reject(new Error('timed out')), 4000);
+    const timer = setTimeout(() => reject(new Error('a TV não respondeu')), 4000);
     bridge.onservicecallback = (msg) => {
       clearTimeout(timer);
       try {
@@ -40,7 +40,7 @@ export function launchApp(id: string): Promise<void> {
         /* treated as failure below */
       }
       if (res.returnValue) resolve();
-      else reject(new Error(res.errorText || 'launch failed'));
+      else reject(new Error(res.errorText || 'falha ao abrir'));
     };
     bridge.call('luna://com.webos.applicationManager/launch', JSON.stringify({id}));
   });

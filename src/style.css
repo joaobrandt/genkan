@@ -45,21 +45,28 @@ body {
   transform: translate(-50%, -50%) scale(var(--fit, 1));
 }
 
-/* Greeting, centred in the top half, in 64px Inter Light.
-   Everything below is positioned, so it all paints over the fixed sky. */
-#greeting {
+/* Date with the time under it, in the top right corner, inset as far as the row is from
+   the left. Everything below is positioned, so it all paints over the fixed sky. */
+#clock {
   position: absolute;
-  inset: 0 0 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  font-size: 64px;
-  font-weight: 300;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  color: rgb(255 255 255 / 0.95);
+  top: 72px;
+  right: 116px;
+  text-align: right;
   animation: rise-in 0.7s cubic-bezier(0.05, 0.7, 0.1, 1) 0.1s both;
+}
+
+#date,
+#time {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: rgb(255 255 255 / 0.6);
+}
+
+#time {
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums; /* digits don't shift as the minutes turn */
 }
 
 @keyframes rise-in {

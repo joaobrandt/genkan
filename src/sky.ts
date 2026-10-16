@@ -324,7 +324,7 @@ function frame(t: number) {
   shootingStar(t);
 }
 
-// Generating the sky takes a moment, so let the greeting and the row paint first, then fade
+// Generating the sky takes a moment, so let the clock and the row paint first, then fade
 // the sky in. Rebuilt (a new sky) if the window is resized — only ever off the TV.
 requestAnimationFrame(() =>
   setTimeout(() => {

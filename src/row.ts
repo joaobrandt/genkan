@@ -55,7 +55,7 @@ function launch() {
   void el.offsetWidth; // restart the press animation
   el.classList.add('launching');
   launchApp(tile.id).catch((err: Error) => {
-    status.textContent = `Couldn't open ${tile.title}: ${err.message}`;
+    status.textContent = `Não foi possível abrir ${tile.title}: ${err.message}`;
     clearTimeout(statusTimer);
     statusTimer = window.setTimeout(() => {
       status.textContent = '';

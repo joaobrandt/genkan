@@ -2,6 +2,8 @@ import './style.css';
 import './sky';
 import './row';
 import './screensaver';
+import {isNight} from './night';
+import {retune} from './music';
 
 const WEEKDAYS = [
   'Domingo',
@@ -44,6 +46,8 @@ const render = () => {
   const now = new Date();
   date.textContent = dateLine(now);
   time.textContent = timeLine(now);
+  document.body.classList.toggle('night', isNight(now));
+  retune();
 };
 // on every minute boundary, so the clock turns over on time
 const tick = () => {

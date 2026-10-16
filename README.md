@@ -21,6 +21,9 @@ them back and does nothing else. The TV's own screensaver is vetoed, so it never
 covers the sky. After half an hour of screensaver the panel switches off (the TV
 stays on), and any key lights it again.
 
+From 22:00 to 06:00 genkan keeps it down: dimmer text and tiles, the music at a
+third of its volume, and the screensaver after 45 seconds instead of two minutes.
+
 > Targets **webOS 24 / Chromium 108** on a rooted TV.
 
 ## Develop

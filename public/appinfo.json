@@ -12,5 +12,6 @@
   "uiRevision": 2,
   "resolution": "1920x1080",
   "disableBackHistoryAPI": true,
-  "requiredACG": ["application.launcher"]
+  "requiredACG": ["application.launcher"],
+  "appCategory": ["home"]
 }

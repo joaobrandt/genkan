@@ -57,18 +57,45 @@ the rooted TV's dropbear — see the comment in `scripts/deploy.mjs`.
 
 ## How genkan becomes the home
 
-The TV's own Home is a signed, read-only app, so genkan takes over around it,
+The TV brings up LG's home in two ways, and genkan takes its place in both,
 without touching any OS files:
 
-- **A launcher service** in the app package ([`service/service.js`](service/service.js)).
-  Being a registered webOS service is what lets it launch apps. It launches
-  genkan at boot (retrying until the app manager is ready) and on waking from
-  standby, and puts it in place of LG's home whenever that comes to the front:
-  on HOME, or when an app closes back to it. (Launching on the HOME key itself
-  doesn't work: LG's home arrives a beat later and covers genkan.)
-- **A boot hook**: `npm run deploy` links [`service/autostart.sh`](service/autostart.sh)
-  into the Homebrew Channel's `/var/lib/webosbrew/init.d/` as `50-genkan`, which
-  starts the service at every cold boot. Deploying also runs it straight away,
-  since installing kills the running service.
+- **HOME**: surface-manager asks the app manager for the *default app of the
+  "home" category* (`/usr/lib/qml/KeyFilters/systemUi.js`). LG's home is that
+  default only because it's the one app declaring `"appCategory": ["home"]`.
+  genkan declares it too (`public/appinfo.json`) and is made the default with
+  `applicationManager/setDefaultApp`, kept in `/var/luna/preferences/general`.
+  HOME then opens genkan directly.
+- **BACK out of an app**, or any app closing with nothing behind it: the front
+  goes empty, and a second later the app manager's last-app handler launches
+  the TV's *idle app*, LG's home, as the read-only system profile says.
+  Launching genkan within that second cancels the handler
+  (`newapp_on_foreground`), so LG's home never starts.
 
-To go back to the stock Home, delete that link and uninstall the app.
+Both are done by **a launcher service** in the app package
+([`service/service.js`](service/service.js)). It sets the default home app at
+every start (at boot the system profile's default wins until then), watches
+the app in front for an empty front and launches genkan into it, launches
+genkan at boot (retrying until the app manager is ready) and on waking from
+standby, and, as a last fallback, replaces LG's home should anything still
+launch it by name (the on-screen context menu's Home button does), with a brief
+flash. The calls a dev service may not make go through `luna-send` as root.
+
+**A boot hook** starts the service: `npm run deploy` links
+[`service/autostart.sh`](service/autostart.sh) into the Homebrew Channel's
+`/var/lib/webosbrew/init.d/` as `50-genkan`, which runs at every cold boot.
+Deploying runs it too, to restart the service on the new code.
+
+A cold boot (a restart, or power cut) still comes up on the last input first:
+that's LG's boot daemon, and genkan takes over once the Homebrew Channel starts
+its services, about 30 seconds in. With Quick Start+ on, the power button
+doesn't cold-boot: the TV resumes, and the service brings genkan back as it
+wakes.
+
+To go back to the stock Home, give LG's home the default back **before**
+uninstalling genkan (otherwise HOME opens nothing), then delete the link:
+
+```sh
+luna-send -n 1 luna://com.webos.applicationManager/setDefaultApp '{"category":"home","appId":"com.webos.app.home"}'
+rm /var/lib/webosbrew/init.d/50-genkan
+```

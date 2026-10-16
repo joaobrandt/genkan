@@ -22,7 +22,7 @@ run('npm run build');
 
 // 2. Clean old ipks, then package the app (dist) and its launcher service (service) together,
 // without ares' legacy minifier (it chokes on Vite output). ares-package warns on every package
-// with a service that the TV's Node.js may be older than ours; webOS 24 ships Node 16.19 and
+// with a service that the TV's Node.js may be older than ours; this TV runs Node 16.20 and
 // service.js is written for it, so that notice is dropped.
 for (const f of readdirSync('.').filter((f) => f.endsWith('.ipk'))) rmSync(f);
 const PACKAGE = 'ares-package dist service -o . --no-minify';
@@ -102,8 +102,8 @@ run(`${SSH} "rm -f ${TMP_IPK}"`);
 // ─── END WORKAROUND ─────────────────────────────────────────────────────────────────────
 
 // 4. Make genkan the home: link the boot hook into the Homebrew Channel's init.d, then run it
-// now, since installing killed the service. It starts the launcher service, which launches
-// genkan and watches HOME — without this, HOME stays dead until the next reboot.
+// now, since installing killed the service. It starts the launcher service, which sets genkan
+// as the TV's default home app and launches it.
 run(`${SSH} "ln -sf ${SVC}/autostart.sh ${BOOT_HOOK} && sh ${SVC}/autostart.sh"`);
 
 console.log(`\n✓ deployed; ${APP_ID} launched, and set to come up at boot and on HOME`);

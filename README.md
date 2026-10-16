@@ -18,7 +18,8 @@ selected tile, which stays on the left; OK opens it. The row is a fixed list in
 After two minutes without input genkan becomes a screensaver: the clock, the row
 and the music fade away and only the sky keeps turning. The next key press brings
 them back and does nothing else. The TV's own screensaver is vetoed, so it never
-covers the sky.
+covers the sky. After half an hour of screensaver the panel switches off (the TV
+stays on), and any key lights it again.
 
 > Targets **webOS 24 / Chromium 108** on a rooted TV.
 

@@ -8,6 +8,7 @@
 //   --watch  also watch the remote, and launch genkan whenever HOME is pressed.
 var Service = require('webos-service');
 var fs = require('fs');
+var exec = require('child_process').exec;
 
 var APP_ID = 'ws.brandt.genkan';
 var HOME_CODE = 773; // HOME on this TV's Magic Remote
@@ -39,6 +40,23 @@ log('start pid=' + process.pid + ' args=[' + ARGS.join(' ') + ']');
 service.register('status', function (m) {
   m.respond({returnValue: true, running: true, pid: process.pid});
 });
+
+// screenOff / screenOn: the app's screensaver darkens the panel after a long idle (the TV and
+// genkan stay on). tvpower may refuse a dev app, so this goes through luna-send, which as root
+// may call anything.
+function tvpower(method) {
+  return function (m) {
+    exec(
+      '/usr/bin/luna-send -n 1 luna://com.webos.service.tvpower/power/' + method + " '{}'",
+      function (err, out) {
+        log(method + ': ' + (err ? err.message : out.trim()));
+        m.respond({returnValue: !err});
+      }
+    );
+  };
+}
+service.register('screenOff', tvpower('turnOffScreen'));
+service.register('screenOn', tvpower('turnOnScreen'));
 
 function launch(reason, done) {
   service.call('luna://com.webos.applicationManager/launch', {id: APP_ID}, function (m) {

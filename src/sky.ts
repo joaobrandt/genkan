@@ -302,8 +302,16 @@ function shootingStar(t: number) {
   ctx.drawImage(sprites[1], hx - 5, hy - 5, 10, 10);
 }
 
+let raf = 0;
+
+/** Stop drawing while the panel is off, and start again when it's back. */
+export function setSkyRunning(on: boolean) {
+  cancelAnimationFrame(raf);
+  if (on) raf = requestAnimationFrame(frame);
+}
+
 function frame(t: number) {
-  requestAnimationFrame(frame);
+  raf = requestAnimationFrame(frame);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
@@ -331,7 +339,7 @@ requestAnimationFrame(() =>
     build();
     nextMeteor = performance.now() + 3000;
     canvas.classList.add('ready');
-    requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   }, 0)
 );
 

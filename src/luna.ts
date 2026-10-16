@@ -55,6 +55,47 @@ export async function launchApp(id: string): Promise<void> {
   if (!res.returnValue) throw new Error(res.errorText || 'falha ao abrir');
 }
 
+/** Switch the panel off or back on, leaving the TV and genkan running. Goes through genkan's
+ *  service, which can reach tvpower when the app itself may not. */
+export function setScreen(on: boolean) {
+  const Bridge = window.PalmServiceBridge;
+  if (!Bridge) {
+    console.log(`screen ${on ? 'on' : 'off'} (not on webOS)`);
+    return;
+  }
+  call(`luna://ws.brandt.genkan.service/${on ? 'screenOn' : 'screenOff'}`, {}, Bridge).catch(() => {
+    /* best effort: at worst the panel stays as it is */
+  });
+}
+
+let power: PalmBridge | undefined; // held for the life of the app: a live subscription
+
+/** Call `fn` whenever the panel comes back on after being off — a key press on the remote
+ *  lights it again without that key ever reaching genkan. */
+export function onScreenOn(fn: () => void) {
+  const Bridge = window.PalmServiceBridge;
+  if (!Bridge || power) return;
+
+  let wasOff = false;
+  power = new Bridge();
+  power.onservicecallback = (msg) => {
+    let res: {state?: string; processing?: string} = {};
+    try {
+      res = JSON.parse(msg);
+    } catch {
+      return;
+    }
+    if (res.state === undefined) return;
+    const on = res.state === 'Active' && !res.processing;
+    if (on && wasOff) fn();
+    wasOff = !on;
+  };
+  power.call(
+    'luna://com.webos.service.tvpower/power/getPowerState',
+    JSON.stringify({subscribe: true})
+  );
+}
+
 const CLIENT = 'ws.brandt.genkan';
 let saverRequests: PalmBridge | undefined; // held for the life of the app: a live subscription
 

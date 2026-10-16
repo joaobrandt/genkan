@@ -1,23 +1,41 @@
 import {fadeIn, fadeOut, stop} from './music';
-import {blockScreenSaver} from './luna';
+import {blockScreenSaver, onScreenOn, setScreen} from './luna';
+import {setSkyRunning} from './sky';
 
 // After a while with no input genkan turns screensaver: the clock and the row drift off and
 // fade, the music fades out, and only the sky keeps turning (styles under body.idle). Any
 // input brings it all back. The key that wakes it does nothing else, so waking never moves
-// the row or opens an app.
+// the row or opens an app. After a long while asleep the panel itself goes dark, which is
+// the best rest an OLED can get; the TV stays on and any key lights it again.
 const IDLE_MS = 2 * 60_000;
+const DARK_MS = 30 * 60_000; // asleep this long, then the panel goes off
 
 let idle = false;
+let dark = false;
 let timer = 0;
+let darkTimer = 0;
 
 function sleep() {
   idle = true;
   document.body.classList.add('idle');
   fadeOut();
+  darkTimer = window.setTimeout(darken, DARK_MS);
+}
+
+function darken() {
+  dark = true;
+  setSkyRunning(false); // nothing to see, so don't draw it
+  setScreen(false);
 }
 
 function wake() {
   idle = false;
+  clearTimeout(darkTimer);
+  if (dark) {
+    dark = false;
+    setSkyRunning(true);
+    setScreen(true); // in case the waking key reached genkan instead of lighting the panel
+  }
   document.body.classList.remove('idle');
   fadeIn();
 }
@@ -58,10 +76,16 @@ addEventListener('pointerdown', activity);
 // HOME while genkan is already up relaunches it rather than sending a key.
 document.addEventListener('webOSRelaunch', activity);
 
+// While dark, the key that lights the panel again is the TV's, and never reaches genkan.
+onScreenOn(() => {
+  if (dark) activity();
+});
+
 // Under another app: silent, and no countdown. Coming back counts as input.
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     clearTimeout(timer);
+    clearTimeout(darkTimer);
     stop();
   } else {
     activity();

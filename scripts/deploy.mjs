@@ -21,9 +21,18 @@ const run = (cmd) => {
 run('npm run build');
 
 // 2. Clean old ipks, then package the app (dist) and its launcher service (service) together,
-// without ares' legacy minifier (it chokes on Vite output).
+// without ares' legacy minifier (it chokes on Vite output). ares-package warns on every package
+// with a service that the TV's Node.js may be older than ours; webOS 24 ships Node 16.19 and
+// service.js is written for it, so that notice is dropped.
 for (const f of readdirSync('.').filter((f) => f.endsWith('.ipk'))) rmSync(f);
-run('ares-package dist service -o . --no-minify');
+const PACKAGE = 'ares-package dist service -o . --no-minify';
+console.log(`\n$ ${PACKAGE}`);
+process.stdout.write(
+  execSync(PACKAGE, {stdio: ['inherit', 'pipe', 'inherit'], encoding: 'utf8'}).replace(
+    /^.*\[Warning\] The Node\.js version available on the target device.*\n.*\n/m,
+    ''
+  )
+);
 
 // 3. Install on the TV
 const ipk = readdirSync('.').find((f) => f.endsWith('.ipk'));

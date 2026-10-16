@@ -10,8 +10,8 @@ const TURN_MS = 9 * 60_000; // one full turn of the sky
 const MILKY_WAY_PX = 384; // Milky Way texture size — it's soft, so it's upscaled
 const CLOUD_PX = 192; // each nebula's texture size
 const CLOUDS = 5; // faint nebulae, 300–600px across
-const STAR_AREA = 600; // one faint star per this many px²
-const BRIGHT_AREA = 16_000; // one twinkling star per this many px²
+const STAR_AREA = 400; // one faint star per this many px²
+const BRIGHT_AREA = 11_000; // one twinkling star per this many px²
 const METEOR_MS = [3_000, 9_000]; // time between shooting stars
 const TINTS = [
   [207, 220, 255],

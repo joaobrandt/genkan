@@ -12,8 +12,8 @@ Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg) (U.S. Air Force
 Heritage of America Band, public domain) looping underneath. The date and time
 sit in the top right corner, and a PS4-style row of the HDMI inputs, apps and
 the TV's settings in the bottom half. Left and Right slide the row under the
-selected tile, which stays on the left; OK opens it. The row is a fixed list in
-`src/tiles.ts`.
+selected tile, which stays on the left; OK opens it, and genkan starts on the
+tile opened last. The row is a fixed list in `src/tiles.ts`.
 
 After two minutes without input genkan becomes a screensaver: the clock, the row
 and the music fade away and only the sky keeps turning. The next key press brings

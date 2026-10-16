@@ -10,6 +10,7 @@ const SMALL = 200 / SIZE;
 const GAP = 16;
 const PITCH = SIZE * SMALL + GAP;
 const GROW = SIZE - SIZE * SMALL; // how much further the tiles after the selected one sit
+const LAST = 'genkan.last'; // localStorage: the ID of the tile opened last
 
 const row = document.getElementById('row')!;
 const title = document.getElementById('title')!;
@@ -26,7 +27,19 @@ const tiles = TILES.map((t) => {
   return el;
 });
 
-let selected = 0;
+// Start where you left off: on the tile opened last, even across reboots.
+function remembered(): number {
+  try {
+    return Math.max(
+      0,
+      TILES.findIndex((t) => t.id === localStorage.getItem(LAST))
+    );
+  } catch {
+    return 0;
+  }
+}
+
+let selected = remembered();
 let statusTimer = 0;
 
 function render() {
@@ -54,13 +67,22 @@ function launch() {
   el.classList.remove('launching');
   void el.offsetWidth; // restart the press animation
   el.classList.add('launching');
-  launchApp(tile.id).catch((err: Error) => {
-    status.textContent = `Não foi possível abrir ${tile.title}: ${err.message}`;
-    clearTimeout(statusTimer);
-    statusTimer = window.setTimeout(() => {
-      status.textContent = '';
-    }, 4000);
-  });
+  launchApp(tile.id).then(
+    () => {
+      try {
+        localStorage.setItem(LAST, tile.id);
+      } catch {
+        /* then the row starts at the first tile */
+      }
+    },
+    (err: Error) => {
+      status.textContent = `Não foi possível abrir ${tile.title}: ${err.message}`;
+      clearTimeout(statusTimer);
+      statusTimer = window.setTimeout(() => {
+        status.textContent = '';
+      }, 4000);
+    }
+  );
 }
 
 addEventListener('keydown', (e) => {

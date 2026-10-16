@@ -1,4 +1,5 @@
-// One-shot deploy: build -> package (no ares minify) -> install -> launch on the TV.
+// One-shot deploy: build -> package the app and its launcher service (no ares minify) ->
+// install -> make genkan the TV's home (boot hook + HOME watcher) and launch it.
 // Usage: npm run deploy   (reads TV_IP from .env)
 import {execSync, spawn} from 'node:child_process';
 import {readFileSync, readdirSync, rmSync} from 'node:fs';
@@ -9,6 +10,8 @@ const TV_IP = process.env.TV_IP;
 if (!TV_IP) throw new Error('TV_IP is not set — add it to .env');
 const SSH_KEY = `${homedir()}/.ssh/id_ed25519`;
 const SSH = `ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no root@${TV_IP}`;
+const SVC = `/media/developer/apps/usr/palm/services/${APP_ID}.service`;
+const BOOT_HOOK = '/var/lib/webosbrew/init.d/50-genkan';
 const run = (cmd) => {
   console.log(`\n$ ${cmd}`);
   execSync(cmd, {stdio: 'inherit'});
@@ -17,9 +20,10 @@ const run = (cmd) => {
 // 1. Build (tsc + Vite, targeting Chromium 108)
 run('npm run build');
 
-// 2. Clean old ipks, then package without ares' legacy minifier (it chokes on Vite output).
+// 2. Clean old ipks, then package the app (dist) and its launcher service (service) together,
+// without ares' legacy minifier (it chokes on Vite output).
 for (const f of readdirSync('.').filter((f) => f.endsWith('.ipk'))) rmSync(f);
-run('ares-package dist -o . --no-minify');
+run('ares-package dist service -o . --no-minify');
 
 // 3. Install on the TV
 const ipk = readdirSync('.').find((f) => f.endsWith('.ipk'));
@@ -88,9 +92,9 @@ await lunaInstall(TMP_IPK);
 run(`${SSH} "rm -f ${TMP_IPK}"`);
 // ─── END WORKAROUND ─────────────────────────────────────────────────────────────────────
 
-// 4. Launch
-run(
-  `${SSH} "/usr/bin/luna-send-pub -n 1 luna://com.webos.applicationManager/launch '{\\"id\\":\\"${APP_ID}\\"}'"`
-);
+// 4. Make genkan the home: link the boot hook into the Homebrew Channel's init.d, then run it
+// now, since installing killed the service. It starts the launcher service, which launches
+// genkan and watches HOME — without this, HOME stays dead until the next reboot.
+run(`${SSH} "ln -sf ${SVC}/autostart.sh ${BOOT_HOOK} && sh ${SVC}/autostart.sh"`);
 
-console.log(`\n✓ deployed; ${APP_ID} launched`);
+console.log(`\n✓ deployed; ${APP_ID} launched, and set to come up at boot and on HOME`);

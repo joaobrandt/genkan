@@ -1,0 +1,9 @@
+{
+  "id": "ws.brandt.genkan.service",
+  "description": "Starts genkan at boot and brings it back on the Home button",
+  "services": [
+    {
+      "name": "ws.brandt.genkan.service"
+    }
+  ]
+}

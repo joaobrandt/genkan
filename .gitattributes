@@ -1,0 +1,3 @@
+# The launcher service and its boot hook run on the TV (busybox sh, node): a CRLF would break
+# them, whatever the cloning machine's core.autocrlf says.
+service/** text eol=lf

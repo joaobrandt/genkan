@@ -31,8 +31,24 @@ Needs the [webOS CLI](https://webostv.developer.lge.com/develop/tools/cli-instal
 
 ```sh
 echo 'TV_IP=192.168.x.x' > .env
-npm run deploy   # build → package → install over ssh → launch
+npm run deploy   # build → package → install over ssh → make it the home → launch
 ```
 
 The install goes over plain ssh rather than `ares-install`, which fails against
 the rooted TV's dropbear — see the comment in `scripts/deploy.mjs`.
+
+## How genkan becomes the home
+
+The TV's own Home is a signed, read-only app, so genkan takes over around it,
+without touching any OS files:
+
+- **A launcher service** in the app package ([`service/service.js`](service/service.js)).
+  Being a registered webOS service is what lets it launch apps. It launches
+  genkan at boot (retrying until the app manager is ready), again whenever the
+  remote's HOME key (code `773`) is pressed, and again on waking from standby.
+- **A boot hook**: `npm run deploy` links [`service/autostart.sh`](service/autostart.sh)
+  into the Homebrew Channel's `/var/lib/webosbrew/init.d/` as `50-genkan`, which
+  starts the service at every cold boot. Deploying also runs it straight away,
+  since installing kills the running service.
+
+To go back to the stock Home, delete that link and uninstall the app.

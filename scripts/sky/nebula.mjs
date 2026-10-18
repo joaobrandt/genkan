@@ -1,8 +1,8 @@
 // The night sky's nebula textures — the Milky Way and small coloured clouds — generated from
-// noise. Pure (no DOM), so they can be timed or tuned on their own.
+// noise, for make-sky.mjs.
 
 /** Seeded PRNG (mulberry32), so one seed always gives the same sky. */
-export function random(seed: number): () => number {
+export function random(seed) {
   return () => {
     seed = (seed + 0x6d2b79f5) | 0;
     let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -11,13 +11,13 @@ export function random(seed: number): () => number {
   };
 }
 
-const smooth = (a: number, b: number, x: number) => {
+const smooth = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 
 /** Fractal value noise: `fbm(x, y, octaves)` in 0..1. */
-function fractalNoise(rand: () => number) {
+function fractalNoise(rand) {
   const perm = new Uint8Array(512);
   const vals = new Float32Array(256);
   for (let i = 0; i < 256; i++) {
@@ -30,8 +30,8 @@ function fractalNoise(rand: () => number) {
   }
   for (let i = 0; i < 256; i++) perm[i + 256] = perm[i];
 
-  const at = (x: number, y: number) => vals[perm[perm[x & 255] + (y & 255)]];
-  const noise = (x: number, y: number) => {
+  const at = (x, y) => vals[perm[perm[x & 255] + (y & 255)]];
+  const noise = (x, y) => {
     const xi = Math.floor(x),
       yi = Math.floor(y);
     const xf = x - xi,
@@ -44,7 +44,7 @@ function fractalNoise(rand: () => number) {
       d = at(xi + 1, yi + 1);
     return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
   };
-  return (x: number, y: number, octaves: number) => {
+  return (x, y, octaves) => {
     let sum = 0,
       amp = 0.5,
       norm = 0;
@@ -63,7 +63,7 @@ function fractalNoise(rand: () => number) {
  * Fill `px` (RGBA, n×n) with a faint Milky Way band at angle `band` (radians), broken up by
  * dark dust lanes. Everywhere else is pure black, so the OLED pixels there stay off.
  */
-export function milkyWay(px: Uint8ClampedArray, n: number, band: number, rand: () => number) {
+export function milkyWay(px, n, band, rand) {
   const fbm = fractalNoise(rand);
   const bx = Math.cos(band),
     by = Math.sin(band);
@@ -103,7 +103,7 @@ const COLOURS = [
  * Fill `px` (RGBA, n×n) with one faint nebula on transparency: wispy, with a ragged edge,
  * blending two colours, and fading out well inside the square.
  */
-export function cloud(px: Uint8ClampedArray, n: number, rand: () => number) {
+export function cloud(px, n, rand) {
   const fbm = fractalNoise(rand);
   const a = COLOURS[Math.floor(rand() * COLOURS.length)];
   const b = COLOURS[Math.floor(rand() * COLOURS.length)];

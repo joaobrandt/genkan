@@ -4,9 +4,9 @@ A minimal home screen for LG webOS TVs. *Genkan* is the entryway of a Japanese
 house — the first place you step into before any room — and 玄 also means
 "dark", which suits a screen that's mostly true OLED black.
 
-It's a single screen over a night sky generated on the TV once per installation
-and kept: stars, a Milky Way band with dust lanes, faint nebulae and a few
-distant spiral, elliptical and edge-on galaxies and tonight's moon, turning,
+It's a single screen over a night sky, made at build time and drawn with WebGL
+at the panel's 4K: stars, a Milky Way band with dust lanes, faint nebulae and a
+few distant spiral, elliptical and edge-on galaxies and tonight's moon, turning,
 with twinkling stars and shooting stars every few seconds — and Holst's [Venus,
 the Bringer of Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg)
 (U.S. Air Force Heritage of America Band, public domain) looping underneath. The
@@ -34,6 +34,11 @@ third of its volume, and the screensaver after 45 seconds instead of two minutes
 npm install
 npm run dev   # http://localhost:5173 — the layout scales to fit any window
 ```
+
+`dev` and `build` first make the sky into `public/sky/` (`npm run sky`,
+[`scripts/make-sky.mjs`](scripts/make-sky.mjs)): its Milky Way, nebulae and
+galaxies as textures, and every star as data, from a fixed seed, so it's the
+same sky every time; change `SEED` there for another one. The app only reads it.
 
 The weather ([Open-Meteo](https://open-meteo.com), no account needed) is for the
 place set in `.env`, read at build time; without it the weather line stays hidden:

@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "node scripts/make-sky.mjs && vite",
+    "sky": "node scripts/make-sky.mjs",
+    "build": "node scripts/make-sky.mjs && tsc && vite build",
     "preview": "vite preview",
     "deploy": "node --env-file-if-exists=.env scripts/deploy.mjs",
     "format": "prettier --write .",

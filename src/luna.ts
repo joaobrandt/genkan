@@ -59,23 +59,33 @@ export async function launchApp(id: string): Promise<void> {
   if (!res.returnValue) throw new Error(res.errorText || 'falha ao abrir');
 }
 
-/** App IDs of the inputs with a signal, i.e. a device that's on, from the TV's external input
- *  manager: undocumented, but open to web apps. Its `connected` is true even for an empty port,
- *  and `hdmiPlugIn` for a console in rest mode, so it's `hdmiSignalExist` that tells. Empty
- *  when the TV doesn't answer. */
+/** App IDs of the inputs with a device that's on, from the TV's external input manager:
+ *  undocumented, but open to web apps. Its `connected` is true even for an empty port, and
+ *  `hdmiPlugIn` for a console in rest mode. `hdmiSignalExist` is only ever true for the input on
+ *  screen (the TV doesn't look at the others), so a console switched on elsewhere shows instead
+ *  in the input's `subList`, as a SIMPLINK (HDMI-CEC) device with `cecPower` "On". Either one
+ *  counts, as some boxes (the one on HDMI 3) report "Off" while sending a picture. Empty when the
+ *  TV doesn't answer. */
+interface InputStatus {
+  appId?: string;
+  hdmiSignalExist?: boolean;
+  subList?: {id?: string; cecPower?: string}[];
+}
+
 export async function liveInputs(): Promise<Set<string>> {
   const Bridge = window.PalmServiceBridge;
   if (!Bridge) return new Set(['com.webos.app.hdmi1']); // off webOS: a PS5 that's on, to see the dot
 
   try {
-    const res = await call<Reply & {devices?: {appId?: string; hdmiSignalExist?: boolean}[]}>(
+    const res = await call<Reply & {devices?: InputStatus[]}>(
       'luna://com.webos.service.eim/getAllInputStatus',
       {},
       Bridge
     );
-    return new Set(
-      (res.devices || []).filter((d) => d.hdmiSignalExist && d.appId).map((d) => d.appId!)
-    );
+    const on = (d: InputStatus) =>
+      d.hdmiSignalExist ||
+      (d.subList || []).some((s) => s.id === 'SIMPLINK' && s.cecPower === 'On');
+    return new Set((res.devices || []).filter((d) => d.appId && on(d)).map((d) => d.appId!));
   } catch {
     return new Set();
   }

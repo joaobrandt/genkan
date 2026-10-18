@@ -1,12 +1,23 @@
 import {cloud, milkyWay, random} from './nebula';
 import {moonPhase, moonSprite} from './moon';
+import {loadSky, saveSky} from './skystore';
 
-// Night sky behind the UI, drawn at runtime on one canvas. A Milky Way texture and a layer of
-// stars, small nebulae and distant galaxies are generated once per launch (a new sky each
-// time) and turn around the screen's centre; brighter stars twinkle on top, and every few
-// seconds a shooting star crosses. Tonight's moon turns with them. The turn also keeps any
-// one pixel from staying lit for long, which the OLED panel likes.
+// Night sky behind the UI, drawn on one canvas. A Milky Way texture and a layer of stars, small
+// nebulae and distant galaxies turn around the screen's centre; brighter stars twinkle on top,
+// tonight's moon turns with them, and every few seconds a shooting star crosses. The turn also
+// keeps any one pixel from staying lit for long, which the OLED panel likes.
+//
+// Generating the Milky Way and the star layer takes the TV a second or two, so it happens once
+// per installation, and the result is kept as images (skystore.ts): every later launch decodes
+// those, and only works out the cheap parts (the twinkling stars, the moon's place) again from
+// the same seed. While genkan is out of sight the layers are let go, so the app in front has
+// that memory rather than the TV swapping it out, and they're decoded again on the way back.
 
+const W = 1920,
+  H = 1080; // drawn at the layout's size, a pixel per CSS px: the 4K
+// panel's double density would quadruple every layer
+const S = Math.ceil(Math.hypot(W, H)); // the layers' size, enough to cover the screen at every angle of the turn
+const SKY_KEY = 'sky-2'; // bump when the generated sky changes, so a new one is made
 const TURN_MS = 9 * 60_000; // one full turn of the sky
 const MILKY_WAY_PX = 384; // Milky Way texture size — it's soft, so it's upscaled
 const CLOUD_PX = 192; // each nebula's texture size
@@ -44,17 +55,15 @@ interface Meteor {
   life: number;
   born: number;
 }
+interface Layers {
+  milkyWay: HTMLCanvasElement | ImageBitmap;
+  stars: HTMLCanvasElement | ImageBitmap;
+}
 
 const canvas = document.getElementById('sky') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', {alpha: false})!;
 
-let W = 0,
-  H = 0,
-  S = 0,
-  dpr = 1;
-let milkyWayLayer: HTMLCanvasElement;
-let starLayer: HTMLCanvasElement;
-let sprites: HTMLCanvasElement[] = [];
+let sky: Layers | null = null;
 let bright: Star[] = [];
 let meteor: Meteor | null = null;
 let nextMeteor = 0;
@@ -63,11 +72,11 @@ let moonX = 0,
   moonY = 0,
   moonAt = -Infinity;
 
-function layer(w: number, h = w): [HTMLCanvasElement, CanvasRenderingContext2D] {
+function layer(w: number, h = w, opaque = false): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  return [c, c.getContext('2d')!];
+  return [c, c.getContext('2d', {alpha: !opaque})!];
 }
 
 /** Soft round glow in one tint, drawn scaled for each twinkling star. */
@@ -82,6 +91,8 @@ function sprite([r, g, b]: number[]) {
   x.fillRect(0, 0, 64, 64);
   return c;
 }
+
+const sprites = TINTS.map(sprite);
 
 /** A round glow of radius `r` at the origin, in the current transform: `stops` are
  *  [offset, rgba] from its centre out. */
@@ -179,15 +190,10 @@ function edgeOn(rand: () => number) {
   return c;
 }
 
-function build() {
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = innerWidth;
-  H = innerHeight;
-  S = Math.ceil(Math.hypot(W, H)); // big enough to cover the screen at every angle of the turn
-  canvas.width = Math.round(W * dpr);
-  canvas.height = Math.round(H * dpr);
-
-  const rand = random(Date.now());
+/** The expensive part of a sky, from `seed`: the Milky Way texture, and the layer of stars,
+ *  faint nebulae and distant galaxies. */
+function generate(seed: number): {milkyWay: HTMLCanvasElement; stars: HTMLCanvasElement} {
+  const rand = random(seed);
   const band = rand() * Math.PI;
   const bx = Math.cos(band),
     by = Math.sin(band);
@@ -198,10 +204,11 @@ function build() {
   const img = mctx.createImageData(MILKY_WAY_PX, MILKY_WAY_PX);
   milkyWay(img.data, MILKY_WAY_PX, band, rand);
   mctx.putImageData(img, 0, 0);
-  milkyWayLayer = mw;
 
-  const [stars, sctx] = layer(Math.round(S * dpr));
-  sctx.scale(dpr, dpr);
+  // opaque black rather than transparent: it's only ever added to the sky ('lighter'), where
+  // black adds nothing, and an opaque image keeps exactly through PNG, where the faint, nearly
+  // transparent edges of the nebulae would be posterized
+  const [stars, sctx] = layer(S, S, true);
   sctx.globalCompositeOperation = 'lighter';
 
   // anywhere the turn will bring on screen at some point: the circle around the centre
@@ -253,16 +260,20 @@ function build() {
       across = gauss() * S * 0.035;
     dot(S / 2 + along * bx + across * by, S / 2 + along * by - across * bx, 0.6);
   }
-  starLayer = stars;
+  return {milkyWay: mw, stars};
+}
 
+/** The cheap part, worked out again at every launch from the same seed (its own stream of it,
+ *  so it doesn't depend on how much `generate` drew): where the moon circles, and which stars
+ *  twinkle. */
+function arrange(seed: number) {
+  const rand = random(seed ^ 0x5bd1e995);
   // the moon circles the centre close enough to stay on screen all the way round
   const ma = rand() * TAU,
-    mr = Math.min(W, H) * (0.2 + rand() * 0.18);
+    mr = H * (0.2 + rand() * 0.18);
   moonX = S / 2 + Math.cos(ma) * mr;
   moonY = S / 2 + Math.sin(ma) * mr;
-  moonAt = -Infinity; // redraw it at this size
 
-  sprites = TINTS.map(sprite);
   bright = Array.from({length: Math.round((S * S) / BRIGHT_AREA)}, () => ({
     x: rand() * S,
     y: rand() * S,
@@ -272,6 +283,68 @@ function build() {
     speed: TAU / (2000 + rand() * 6000), // a twinkle every 2–8 s
     phase: rand() * TAU
   }));
+}
+
+const png = (c: HTMLCanvasElement) =>
+  new Promise<Blob>((resolve, reject) => {
+    c.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png');
+  });
+
+/** Get the sky's layers: the kept ones if there are, otherwise make them now and keep them. */
+async function load() {
+  const kept = await loadSky(SKY_KEY);
+  if (kept) {
+    const [mw, stars] = await Promise.all([
+      createImageBitmap(kept.milkyWay),
+      createImageBitmap(kept.stars)
+    ]);
+    sky = {milkyWay: mw, stars};
+    arrange(kept.seed);
+    return;
+  }
+  const seed = Math.floor(Math.random() * 2 ** 31);
+  const made = generate(seed);
+  sky = made;
+  arrange(seed);
+  Promise.all([png(made.milkyWay), png(made.stars)])
+    .then(([mw, stars]) => saveSky(SKY_KEY, {seed, milkyWay: mw, stars}))
+    .catch(() => {
+      /* not kept: the next launch makes a new one */
+    });
+}
+
+/** Let the layers go, and the canvas's own pixels with them. Decoded images are closed at once;
+ *  freshly generated canvases are only dropped, as their PNG may still be being written from
+ *  them (that takes the TV a few seconds), and freeing them under it garbles the kept sky. */
+function release() {
+  cancelAnimationFrame(raf);
+  if (sky) {
+    for (const l of [sky.milkyWay, sky.stars]) if (l instanceof ImageBitmap) l.close();
+    sky = null;
+  }
+  canvas.classList.remove('ready');
+  canvas.width = canvas.height = 0;
+}
+
+let loading: Promise<void> | null = null;
+
+async function show() {
+  if (!sky) {
+    loading ??= load().finally(() => {
+      loading = null;
+    });
+    await loading;
+    if (document.hidden) {
+      release();
+      return; // gone again meanwhile
+    }
+  }
+  if (canvas.width !== W) {
+    canvas.width = W;
+    canvas.height = H;
+  }
+  canvas.classList.add('ready');
+  run();
 }
 
 function shootingStar(t: number) {
@@ -318,33 +391,40 @@ function shootingStar(t: number) {
 }
 
 let raf = 0;
+let wanted = true; // false while the panel is off: nothing to see, so nothing drawn
+
+function run() {
+  cancelAnimationFrame(raf);
+  if (wanted && sky && !document.hidden) raf = requestAnimationFrame(frame);
+}
 
 /** Stop drawing while the panel is off, and start again when it's back. */
 export function setSkyRunning(on: boolean) {
-  cancelAnimationFrame(raf);
-  if (on) raf = requestAnimationFrame(frame);
+  wanted = on;
+  run();
 }
 
 function frame(t: number) {
   raf = requestAnimationFrame(frame);
+  if (!sky) return;
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
   ctx.translate(W / 2, H / 2);
   ctx.rotate((t / TURN_MS) * TAU);
   ctx.translate(-S / 2, -S / 2);
-  ctx.drawImage(milkyWayLayer, 0, 0, S, S);
+  ctx.drawImage(sky.milkyWay, 0, 0, S, S);
 
   ctx.globalCompositeOperation = 'lighter';
-  ctx.drawImage(starLayer, 0, 0, S, S);
+  ctx.drawImage(sky.stars, 0, 0, S, S);
   for (const s of bright) {
     ctx.globalAlpha = s.base * (0.6 + 0.4 * Math.sin(t * s.speed + s.phase));
     ctx.drawImage(s.sprite, s.x - s.size / 2, s.y - s.size / 2, s.size, s.size);
   }
 
   if (Date.now() - moonAt > MOON_MS) {
-    moon = moonSprite(MOON_R * dpr, moonPhase(new Date()));
+    moon = moonSprite(MOON_R, moonPhase(new Date()));
     moonAt = Date.now();
   }
   if (moon) {
@@ -353,23 +433,16 @@ function frame(t: number) {
     ctx.drawImage(moon, moonX - 2 * MOON_R, moonY - 2 * MOON_R, 4 * MOON_R, 4 * MOON_R);
   }
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   shootingStar(t);
 }
 
-// Generating the sky takes a moment, so let the clock and the row paint first, then fade
-// the sky in. Rebuilt (a new sky) if the window is resized — only ever off the TV.
-requestAnimationFrame(() =>
-  setTimeout(() => {
-    build();
-    nextMeteor = performance.now() + 3000;
-    canvas.classList.add('ready');
-    raf = requestAnimationFrame(frame);
-  }, 0)
-);
-
-let resizeTimer = 0;
-addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = window.setTimeout(build, 250);
+// Out of sight, let the sky go; back in sight, load it again (decoding the kept images).
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) release();
+  else show();
 });
+
+// Let the clock and the row paint first, then fade the sky in.
+nextMeteor = performance.now() + 3000;
+requestAnimationFrame(() => setTimeout(show, 0));

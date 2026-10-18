@@ -11,21 +11,20 @@ let target = 0; // the volume it's at or gliding to
 const level = () => (isNight() ? NIGHT_VOLUME : 1);
 
 // Glide the volume to `to` over `ms`, then call `done`. A new glide replaces one under way.
+// On a timer rather than animation frames, so a slow frame (the sky coming back after another
+// app) can't hold the music silent; and clamped, as a volume outside 0–1 throws.
 function glide(to: number, ms: number, done?: () => void) {
-  cancelAnimationFrame(ramp);
+  clearInterval(ramp);
   target = to;
   const from = audio.volume,
     start = performance.now();
-  const step = (t: number) => {
-    // t is when the frame began, which can be a moment before `start` (right after the page
-    // resumes, say): unclamped, k goes negative, the volume leaves 0–1 and setting it throws,
-    // which stops the glide for good.
-    const k = Math.max(0, Math.min(1, (t - start) / ms));
+  ramp = window.setInterval(() => {
+    const k = Math.max(0, Math.min(1, (performance.now() - start) / ms));
     audio.volume = from + (to - from) * k;
-    if (k < 1) ramp = requestAnimationFrame(step);
-    else done?.();
-  };
-  ramp = requestAnimationFrame(step);
+    if (k < 1) return;
+    clearInterval(ramp);
+    done?.();
+  }, 40);
 }
 
 export function fadeIn() {
@@ -42,7 +41,7 @@ export function fadeOut() {
 
 /** Silence at once — genkan went under another app. The next fadeIn starts from zero. */
 export function stop() {
-  cancelAnimationFrame(ramp);
+  clearInterval(ramp);
   audio.pause();
   audio.volume = target = 0;
 }

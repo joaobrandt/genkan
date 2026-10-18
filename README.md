@@ -4,17 +4,18 @@ A minimal home screen for LG webOS TVs. *Genkan* is the entryway of a Japanese
 house — the first place you step into before any room — and 玄 also means
 "dark", which suits a screen that's mostly true OLED black.
 
-It's a single screen over a night sky generated at launch — a new one each time:
-stars, a Milky Way band with dust lanes, faint nebulae and a few distant spiral,
-elliptical and edge-on galaxies and tonight's moon, turning, with twinkling
-stars and shooting stars every few seconds — and Holst's [Venus, the Bringer of
-Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg) (U.S. Air Force
-Heritage of America Band, public domain) looping underneath. The date, time and
-weather sit in the top right corner, and a PS4-style row of the HDMI inputs,
-apps and the TV's settings in the bottom half. Left and Right slide the row
-under the selected tile, which stays on the left; OK opens it, and genkan starts
-on the tile opened last. The row is a fixed list in `src/tiles.ts`. A green dot
-on an input tile means the TV sees a device on at that HDMI port.
+It's a single screen over a night sky generated on the TV once per installation
+and kept: stars, a Milky Way band with dust lanes, faint nebulae and a few
+distant spiral, elliptical and edge-on galaxies and tonight's moon, turning,
+with twinkling stars and shooting stars every few seconds — and Holst's [Venus,
+the Bringer of Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg)
+(U.S. Air Force Heritage of America Band, public domain) looping underneath. The
+date, time and weather sit in the top right corner, and a PS4-style row of the
+HDMI inputs, apps and the TV's settings in the bottom half. Left and Right slide
+the row under the selected tile, which stays on the left; OK opens it, and
+genkan starts on the tile opened last. The row is a fixed list in
+`src/tiles.ts`. A green dot on an input tile means the TV sees a device on at
+that HDMI port.
 
 After two minutes without input genkan becomes a screensaver: the clock, the row
 and the music fade away and only the sky keeps turning. The next key press brings

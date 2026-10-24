@@ -1,65 +1,134 @@
 # genkan 玄関
 
-A minimal home screen for LG webOS TVs. *Genkan* is the entryway of a Japanese
-house — the first place you step into before any room — and 玄 also means
-"dark", which suits a screen that's mostly true OLED black.
+An ad-free home screen for LG webOS TVs: no ads, no recommendation rows, no
+carousel of things you'll never watch. Just a night sky turning on true OLED
+black, calm music, the time and weather, and your inputs and apps in one row.
 
-It's a single screen over a night sky, made at build time and drawn with WebGL
-at the panel's 4K: stars, a Milky Way band with dust lanes, faint nebulae and a
-few distant spiral, elliptical and edge-on galaxies and tonight's moon, turning,
-with twinkling stars and shooting stars every few seconds — and Holst's [Venus,
-the Bringer of Peace](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg)
-(U.S. Air Force Heritage of America Band, public domain) looping underneath. The
-date, time and weather sit in the top right corner, and a PS4-style row of the
-HDMI inputs, apps and the TV's settings in the bottom half. Left and Right slide
-the row under the selected tile, which stays on the left; OK opens it, and
-genkan starts on the tile opened last. The row is a fixed list in
-`src/tiles.ts`. A green dot on an input tile means the TV sees a device on at
-that HDMI port.
+*Genkan* is the entryway of a Japanese house — the first place you step into
+before any room — and 玄 also means "dark", which suits a screen that's mostly
+black.
 
-After two minutes without input genkan becomes a screensaver: the clock, the row
-and the music fade away and only the sky keeps turning. The next key press brings
-them back and does nothing else. The TV's own screensaver is vetoed, so it never
-covers the sky. After half an hour of screensaver the panel switches off (the TV
-stays on), and any key lights it again.
+It runs as a sideloaded web app and takes over the **Home button** and **boot**,
+so the TV comes up straight into it. Everything lives inside the app package: it
+edits no OS files, and a plain uninstall gives the TV back its own home.
 
-From 22:00 to 06:00 genkan keeps it down: dimmer text and tiles, the music at a
-third of its volume, and the screensaver after 45 seconds instead of two minutes.
+![genkan — date, time and weather over a night sky, and a row of inputs and apps](docs/home.png)
 
-> Targets **webOS 24 / Chromium 108** on a rooted TV.
+<p align="center">
+  <img src="docs/navigation.gif" width="100%" alt="Moving along the row with the remote: the selected tile stays on the left and the row slides under it">
+</p>
 
-## Develop
+> Built and used on a rooted **LG webOS 24** TV (**Chromium 108**), with the
+> [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel).
+
+---
+
+## What you get
+
+- **A night sky** — stars, a Milky Way band with dust lanes, faint nebulae, a
+  few distant galaxies and tonight's moon, drawn with WebGL at the panel's 4K
+  and turning slowly, with twinkling stars and a shooting star every few
+  seconds. The turn also keeps any one OLED pixel from staying lit for long.
+- **Calm music** — Holst's *Venus, the Bringer of Peace* looping underneath. It
+  pauses while another app is in front and fades back in when you return.
+- **Clock and weather** — date, time and the current weather in the top right
+  corner, from [Open-Meteo](https://open-meteo.com) (no account or key).
+- **A PS4-style row** — HDMI inputs, apps and the TV's settings. Left and Right
+  slide the row under the selected tile, which stays on the left; OK opens it.
+  genkan starts on the tile opened last.
+- **Input dots** — a green dot on an input tile means the TV sees a device on at
+  that HDMI port (from the HDMI signal or HDMI-CEC).
+- **Screensaver** — after two minutes without input the clock, the row and the
+  music fade away and only the sky keeps turning; the next key brings them back
+  and does nothing else. The TV's own screensaver is vetoed, and after half an
+  hour the panel switches off (the TV stays on) until any key lights it again.
+- **Night mode** — from 22:00 to 06:00: dimmer text and tiles, the music at a
+  third of its volume, and the screensaver after 45 seconds.
+- **Home button + boot** — HOME, BACK out of an app, and a cold boot or wake from
+  standby all land in genkan. See [How genkan becomes the home](#how-genkan-becomes-the-home).
+
+The date and weather are in Brazilian Portuguese.
+
+## Tech stack
+
+Vite + TypeScript, no framework, built for Chromium 108. The sky is made at
+build time by [`scripts/make-sky.mjs`](scripts/make-sky.mjs) from a fixed seed
+(textures for the Milky Way, nebulae and galaxies, and every star as data), so
+it's the same sky every time and the TV only has to draw it. A small Node
+service in the app package (written for the TV's Node 16) makes genkan the home.
+Packaged with the webOS `ares` CLI.
+
+---
+
+## Prerequisites
+
+1. **A rooted LG webOS TV** with the
+   [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel) and
+   its SSH server on, reachable as `root` with your `~/.ssh/id_ed25519` key. The
+   boot hook needs the Homebrew Channel; LG's Developer Mode alone can't keep
+   genkan as the home.
+2. **Node.js** — the version in [`mise.toml`](mise.toml).
+3. **The webOS CLI:** `npm i -g @webos-tools/cli` (provides `ares-package`).
+
+## Setup
 
 ```sh
+git clone https://github.com/joaobrandt/genkan.git
+cd genkan
 npm install
-npm run dev   # http://localhost:5173 — the layout scales to fit any window
 ```
 
-`dev` and `build` first make the sky into `public/sky/` (`npm run sky`,
-[`scripts/make-sky.mjs`](scripts/make-sky.mjs)): its Milky Way, nebulae and
-galaxies as textures, and every star as data, from a fixed seed, so it's the
-same sky every time; change `SEED` there for another one. The app only reads it.
-
-The weather ([Open-Meteo](https://open-meteo.com), no account needed) is for the
-place set in `.env`, read at build time; without it the weather line stays hidden:
+Then a `.env` with the TV's address and, for the weather, your location (read
+at build time; without it the weather line stays hidden):
 
 ```sh
+TV_IP=192.168.x.x
 VITE_LAT=-23.55
 VITE_LON=-46.63
 ```
 
-## Deploy
+### Make it yours
 
-Needs the [webOS CLI](https://webostv.developer.lge.com/develop/tools/cli-installation)
-(`ares-package`) and root ssh to the TV with `~/.ssh/id_ed25519`.
+| What | Where |
+|------|-------|
+| Tiles: inputs and apps, in order | [`src/tiles.ts`](src/tiles.ts) |
+| Tile icons | [`public/icons/`](public/icons/) |
+| Weather location | `VITE_LAT` / `VITE_LON` in `.env` |
+| Another sky | `SEED` in [`scripts/make-sky.mjs`](scripts/make-sky.mjs) |
+| Night hours | [`src/night.ts`](src/night.ts) |
+| Screensaver and panel-off times | [`src/screensaver.ts`](src/screensaver.ts) |
+| Date and weather wording | [`src/main.ts`](src/main.ts), [`src/weather.ts`](src/weather.ts) |
+
+> App IDs must match apps **installed on your TV**; an HDMI input is
+> `com.webos.app.hdmi1` to `hdmi4`. List them with
+> `luna-send -n 1 luna://com.webos.applicationManager/listApps '{}'` over SSH.
+
+---
+
+## Develop
 
 ```sh
-echo 'TV_IP=192.168.x.x' > .env
-npm run deploy   # build → package → install over ssh → make it the home → launch
+npm run dev   # http://localhost:5173 — the layout scales to fit any window
 ```
 
-The install goes over plain ssh rather than `ares-install`, which fails against
-the rooted TV's dropbear — see the comment in `scripts/deploy.mjs`.
+Off the TV, launching a tile only logs it, and the first input shows a dot so
+you can see one. `dev` and `build` make the sky into `public/sky/` first
+(`npm run sky` on its own).
+
+## Deploy to the TV
+
+```sh
+npm run deploy   # build → package → install over SSH → make it the home → launch
+```
+
+[`scripts/deploy.mjs`](scripts/deploy.mjs) packages the web app (`dist/`) and
+the service together with `ares-package --no-minify` (ares' legacy minifier
+chokes on Vite's output). It installs over plain SSH rather than with
+`ares-install`, which fails against the rooted TV's dropbear: it streams the
+`.ipk` to the TV and calls the app installer there. Then it links the boot hook
+and runs it, which restarts the service on the new code and launches genkan.
+
+---
 
 ## How genkan becomes the home
 
@@ -90,18 +159,48 @@ flash. The calls a dev service may not make go through `luna-send` as root.
 **A boot hook** starts the service: `npm run deploy` links
 [`service/autostart.sh`](service/autostart.sh) into the Homebrew Channel's
 `/var/lib/webosbrew/init.d/` as `50-genkan`, which runs at every cold boot.
-Deploying runs it too, to restart the service on the new code.
 
-A cold boot (a restart, or power cut) still comes up on the last input first:
-that's LG's boot daemon, and genkan takes over once the Homebrew Channel starts
-its services, about 30 seconds in. With Quick Start+ on, the power button
-doesn't cold-boot: the TV resumes, and the service brings genkan back as it
-wakes.
+## Troubleshooting
 
-To go back to the stock Home, give LG's home the default back **before**
-uninstalling genkan (otherwise HOME opens nothing), then delete the link:
+- **A cold boot shows the last input first** — that's LG's boot daemon; genkan
+  takes over once the Homebrew Channel starts its services, about 30 seconds
+  in. With Quick Start+ on, the power button doesn't cold-boot: the TV resumes,
+  and the service brings genkan back as it wakes.
+- **`ares-install` fails with "Unable to exec"** — the rooted TV's dropbear kills
+  its exec channel. Use `npm run deploy`, which installs over plain SSH.
+- **A tile doesn't open** — its app ID isn't installed on your TV; the reason
+  shows under the tile's name for a few seconds.
+- **An input's dot stays off** — the TV only looks for a picture on the input
+  on screen; a device on at another port shows over HDMI-CEC, so turn on
+  SIMPLINK (HDMI-CEC) in the TV's settings.
+- **The service's log** is on the TV at `/tmp/genkan-svc.log`.
+
+## Uninstall
+
+Give LG's home the default back **before** uninstalling genkan (otherwise HOME
+opens nothing), and delete the boot hook, over SSH:
 
 ```sh
 luna-send -n 1 luna://com.webos.applicationManager/setDefaultApp '{"category":"home","appId":"com.webos.app.home"}'
 rm /var/lib/webosbrew/init.d/50-genkan
 ```
+
+Then uninstall genkan like any other app.
+
+## Credits
+
+- Music: Holst's [*Venus, the Bringer of Peace*](https://commons.wikimedia.org/wiki/File:Holst-_venus.ogg),
+  by the U.S. Air Force Heritage of America Band (public domain, as a work of
+  the US government), from Wikimedia Commons.
+- Weather from [Open-Meteo](https://open-meteo.com).
+- [Inter](https://rsms.me/inter/) by Rasmus Andersson (SIL Open Font License).
+- Icons: [Lucide](https://lucide.dev)'s gear and TV (ISC), the Homebrew
+  Channel's own (MIT), the Jellyfin logo (CC BY-SA 4.0) and the public-domain
+  Apple TV logo.
+- Built on the [webOS Homebrew](https://www.webosbrew.org/) project's tooling.
+
+## License
+
+[MIT](LICENSE). The app icons under `public/icons/` belong to their respective
+owners and are included only so the tiles look like the apps they open; replace
+them with your own if you prefer.

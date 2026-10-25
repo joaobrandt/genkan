@@ -107,7 +107,7 @@ declare global {
   }
 }
 
-const LOCALE = String(
+export const LOCALE = String(
   import.meta.env.GENKAN_LANG ||
     window.webOSSystem?.locale ||
     window.PalmSystem?.locale ||

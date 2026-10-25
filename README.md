@@ -67,13 +67,15 @@ npm install
 Then a `.env` with the TV's address and, for the weather, your location (read
 at build time; without it the weather line stays hidden). `GENKAN_LANG` is
 optional: it pins genkan to `en`, `pt-BR` or `es` whatever the TV's menus are
-in.
+in. So is `GENKAN_TEMPERATURE_UNIT`, `celsius` or `fahrenheit`: without it,
+the unit follows the language's country (Fahrenheit for US English).
 
 ```sh
 TV_IP=192.168.x.x
 GENKAN_LATITUDE=-23.55
 GENKAN_LONGITUDE=-46.63
 GENKAN_LANG=pt-BR
+GENKAN_TEMPERATURE_UNIT=celsius
 ```
 
 ### Make it yours
@@ -87,6 +89,7 @@ GENKAN_LANG=pt-BR
 | Night hours | [`src/night.ts`](src/night.ts) |
 | Screensaver and panel-off times | [`src/screensaver.ts`](src/screensaver.ts) |
 | Language | `GENKAN_LANG` in `.env` |
+| Temperature unit | `GENKAN_TEMPERATURE_UNIT` in `.env` |
 | Wording, and another language | [`src/i18n.ts`](src/i18n.ts) |
 
 > App IDs must match apps **installed on your TV**; an HDMI input is

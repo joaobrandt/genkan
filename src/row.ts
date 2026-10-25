@@ -17,7 +17,7 @@ const row = document.getElementById('row')!;
 const title = document.getElementById('title')!;
 const status = document.getElementById('status')!;
 
-const tiles = TILES.map((t) => {
+const tiles = TILES.map((t, i) => {
   const el = document.createElement('div');
   el.className = 'tile';
   const img = document.createElement('img');
@@ -26,6 +26,7 @@ const tiles = TILES.map((t) => {
   const dot = document.createElement('span'); // lit while a device is on at this input
   dot.className = 'dot';
   el.append(img, dot);
+  el.addEventListener('click', () => launch(i));
   row.append(el);
   return el;
 });
@@ -64,9 +65,9 @@ function select(i: number) {
   render();
 }
 
-function launch() {
-  const tile = TILES[selected];
-  const el = tiles[selected];
+function launch(i = selected) {
+  const tile = TILES[i];
+  const el = tiles[i];
   el.classList.remove('launching');
   void el.offsetWidth; // restart the press animation
   el.classList.add('launching');

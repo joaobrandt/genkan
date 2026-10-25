@@ -3,6 +3,7 @@ import {blockScreenSaver, onScreenOn, setScreen} from './luna';
 import {setSkyRunning} from './sky';
 import {shift} from './shift';
 import {isNight} from './night';
+import {onPointerMove} from './pointer';
 
 // After a while with no input genkan turns screensaver: the clock and the row drift off and
 // fade, the music fades out, and only the sky keeps turning (styles under body.idle). Any
@@ -13,12 +14,14 @@ const IDLE_MS = 2 * 60_000;
 const NIGHT_IDLE_MS = 45_000;
 const DARK_MS = 30 * 60_000; // asleep this long, then the panel goes off
 const FADE_MS = 3_000; // how long the UI takes to fade out (style.css)
+const RETURN_MS = 1_000; // and to come back
 
 let idle = false;
 let dark = false;
 let timer = 0;
 let darkTimer = 0;
 let shiftTimer = 0;
+let wokeAt = -Infinity;
 
 function sleep() {
   idle = true;
@@ -36,6 +39,7 @@ function darken() {
 
 function wake() {
   idle = false;
+  wokeAt = performance.now();
   clearTimeout(darkTimer);
   clearTimeout(shiftTimer);
   if (dark) {
@@ -68,17 +72,28 @@ addEventListener(
   true
 );
 
-// Picking up the Magic Remote moves its pointer. Only real moves count: browsers also send
-// mousemoves when things shift under a pointer that stands still, as the UI does going idle.
-let px = NaN,
-  py = NaN;
-addEventListener('pointermove', (e) => {
-  if (e.screenX === px && e.screenY === py) return;
-  px = e.screenX;
-  py = e.screenY;
-  activity();
-});
-addEventListener('pointerdown', activity);
+// Picking up the Magic Remote moves its pointer. A click that wakes genkan does nothing else either,
+// nor one while the row is still coming back.
+onPointerMove(activity);
+let wakingClick = false;
+addEventListener(
+  'pointerdown',
+  () => {
+    wakingClick = idle || performance.now() - wokeAt < RETURN_MS;
+    activity();
+  },
+  true
+);
+addEventListener(
+  'click',
+  (e) => {
+    if (!wakingClick) return;
+    wakingClick = false;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  },
+  true
+);
 
 // HOME while genkan is already up relaunches it rather than sending a key.
 document.addEventListener('webOSRelaunch', activity);

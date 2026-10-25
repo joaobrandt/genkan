@@ -15,8 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
-  /* TV: no cursor, no text selection, no scrollbars */
-  cursor: none;
+  /* TV: no text selection, no scrollbars */
   user-select: none;
 }
 
@@ -112,7 +111,8 @@ body {
   transform-origin: left center; /* scaled tiles keep the row's middle line */
   transition:
     transform 0.3s cubic-bezier(0.2, 0, 0, 1),
-    opacity 0.3s;
+    opacity 0.3s,
+    box-shadow 0.2s;
 }
 
 /* blue wash over the previous tile, deepest at the screen edge */
@@ -173,9 +173,22 @@ body {
 /* tiles further back slide off and fade */
 .tile.passed {
   opacity: 0;
+  pointer-events: none;
 }
 .tile.launching img {
   animation: press 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* The tile under the Magic Remote's pointer glows (pointer.ts). */
+.pointer .tile:hover {
+  box-shadow:
+    0 0 0 3px rgb(255 255 255 / 0.5),
+    0 0 40px 4px rgb(255 255 255 / 0.3);
+}
+.pointer .tile.selected:hover {
+  box-shadow:
+    0 0 0 4px rgb(255 255 255 / 0.85),
+    0 0 48px 6px rgb(255 255 255 / 0.35);
 }
 
 @keyframes press {
@@ -221,6 +234,16 @@ body {
   box-shadow:
     0 0 0 4px rgb(255 255 255 / 0.5),
     0 18px 48px -12px rgb(0 0 0 / 0.9);
+}
+.night.pointer .tile:hover {
+  box-shadow:
+    0 0 0 3px rgb(255 255 255 / 0.3),
+    0 0 40px 4px rgb(255 255 255 / 0.15);
+}
+.night.pointer .tile.selected:hover {
+  box-shadow:
+    0 0 0 4px rgb(255 255 255 / 0.5),
+    0 0 48px 6px rgb(255 255 255 / 0.18);
 }
 
 /* Screensaver (screensaver.ts): with body.idle the clock floats up and the row sinks, both

@@ -71,8 +71,8 @@ in.
 
 ```sh
 TV_IP=192.168.x.x
-VITE_LAT=-23.55
-VITE_LON=-46.63
+GENKAN_LATITUDE=-23.55
+GENKAN_LONGITUDE=-46.63
 GENKAN_LANG=pt-BR
 ```
 
@@ -82,7 +82,7 @@ GENKAN_LANG=pt-BR
 |------|-------|
 | Tiles: inputs and apps, in order | [`src/tiles.ts`](src/tiles.ts) |
 | Tile icons | [`public/icons/`](public/icons/) |
-| Weather location | `VITE_LAT` / `VITE_LON` in `.env` |
+| Weather location | `GENKAN_LATITUDE` / `GENKAN_LONGITUDE` in `.env` |
 | Another sky | `SEED` in [`scripts/make-sky.mjs`](scripts/make-sky.mjs) |
 | Night hours | [`src/night.ts`](src/night.ts) |
 | Screensaver and panel-off times | [`src/screensaver.ts`](src/screensaver.ts) |

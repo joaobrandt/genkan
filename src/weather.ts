@@ -1,9 +1,10 @@
-// One line under the clock, "22° · Cloudy" (in the TV's language), from Open-Meteo (free, no account or key). The
-// place is VITE_LAT / VITE_LON in .env, read at build time; without them the line stays empty.
+// One line under the clock, "22° · Cloudy" (in the TV's language), from Open-Meteo (free, no
+// account or key). The place is GENKAN_LATITUDE / GENKAN_LONGITUDE in .env, read at build time;
+// without them the line stays empty.
 import {T} from './i18n';
 
-const LAT = import.meta.env.VITE_LAT;
-const LON = import.meta.env.VITE_LON;
+const LATITUDE = import.meta.env.GENKAN_LATITUDE;
+const LONGITUDE = import.meta.env.GENKAN_LONGITUDE;
 const REFRESH_MS = 15 * 60_000;
 const STALE_MS = 60 * 60_000; // an older reading is dropped rather than shown as current
 
@@ -28,9 +29,8 @@ let last = 0; // when the shown reading was fetched
 
 async function refresh() {
   try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weather_code`
-    );
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,weather_code`;
+    const res = await fetch(url);
     const {current} = (await res.json()) as {
       current: {temperature_2m: number; weather_code: number};
     };
@@ -48,7 +48,7 @@ function check() {
   if (Date.now() - last > REFRESH_MS) refresh();
 }
 
-if (LAT && LON) {
+if (LATITUDE && LONGITUDE) {
   check();
   setInterval(check, 60_000);
   document.addEventListener('visibilitychange', check);

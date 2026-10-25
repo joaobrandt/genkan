@@ -1,5 +1,6 @@
 import {TILES} from './tiles';
 import {launchApp, liveInputs} from './luna';
+import {T} from './i18n';
 
 // PS4-style row: the selected tile stays put at the row's left edge, larger than the
 // rest, and Left/Right slide the whole row under it. The tile before it peeks in,
@@ -78,7 +79,7 @@ function launch() {
       }
     },
     (err: Error) => {
-      status.textContent = `Não foi possível abrir ${tile.title}: ${err.message}`;
+      status.textContent = T.cantOpen(tile.title, err.message);
       clearTimeout(statusTimer);
       statusTimer = window.setTimeout(() => {
         status.textContent = '';

@@ -1,6 +1,8 @@
+import {T} from './i18n';
+
 export interface Tile {
   id: string; // webOS app ID — launching an HDMI input app switches the TV to that input
-  title: string;
+  title: string; // a name of its own, or one of T's in the TV's language
   icon: string; // public/icons/*
 }
 
@@ -15,5 +17,5 @@ export const TILES: Tile[] = [
   {id: 'amazon', title: 'Prime Video', icon: 'icons/prime.png'},
   {id: 'com.apple.appletv', title: 'Apple TV', icon: 'icons/appletv.svg'},
   {id: 'org.webosbrew.hbchannel', title: 'Homebrew Channel', icon: 'icons/homebrew.svg'}, // webosbrew, MIT
-  {id: 'com.palm.app.settings', title: 'Configurações', icon: 'icons/settings.svg'}
+  {id: 'com.palm.app.settings', title: T.settings, icon: 'icons/settings.svg'}
 ];

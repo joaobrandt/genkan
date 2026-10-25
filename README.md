@@ -40,6 +40,9 @@ edits no OS files, and a plain uninstall gives the TV back its own home.
   third of its volume, and the screensaver after 45 seconds.
 - **Home button + boot** — HOME, BACK out of an app, and a cold boot or wake from
   standby all land in genkan.
+- **TV language** — The application follows the TV's menu language, with
+  translations for English, Brazilian Portuguese and Spanish (English for any
+  other).
 
 ---
 
@@ -62,12 +65,15 @@ npm install
 ```
 
 Then a `.env` with the TV's address and, for the weather, your location (read
-at build time; without it the weather line stays hidden):
+at build time; without it the weather line stays hidden). `GENKAN_LANG` is
+optional: it pins genkan to `en`, `pt-BR` or `es` whatever the TV's menus are
+in.
 
 ```sh
 TV_IP=192.168.x.x
 VITE_LAT=-23.55
 VITE_LON=-46.63
+GENKAN_LANG=pt-BR
 ```
 
 ### Make it yours
@@ -80,7 +86,8 @@ VITE_LON=-46.63
 | Another sky | `SEED` in [`scripts/make-sky.mjs`](scripts/make-sky.mjs) |
 | Night hours | [`src/night.ts`](src/night.ts) |
 | Screensaver and panel-off times | [`src/screensaver.ts`](src/screensaver.ts) |
-| Date and weather wording | [`src/main.ts`](src/main.ts), [`src/weather.ts`](src/weather.ts) |
+| Language | `GENKAN_LANG` in `.env` |
+| Wording, and another language | [`src/i18n.ts`](src/i18n.ts) |
 
 > App IDs must match apps **installed on your TV**; an HDMI input is
 > `com.webos.app.hdmi1` to `hdmi4`. List them with

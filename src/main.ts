@@ -5,48 +5,14 @@ import './screensaver';
 import './weather';
 import {isNight} from './night';
 import {retune} from './music';
-
-const WEEKDAYS = [
-  'Domingo',
-  'Segunda-feira',
-  'Terça-feira',
-  'Quarta-feira',
-  'Quinta-feira',
-  'Sexta-feira',
-  'Sábado'
-];
-const MONTHS = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro'
-];
-
-// "Sexta-feira, 16 de Outubro de 2026". Spelled out by hand rather than with Intl, so it
-// doesn't depend on the TV's browser carrying pt-BR locale data.
-function dateLine(d: Date): string {
-  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} de ${MONTHS[d.getMonth()]} de ${d.getFullYear()}`;
-}
-
-// "10:42"
-function timeLine(d: Date): string {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
+import {T} from './i18n';
 
 const date = document.getElementById('date')!;
 const time = document.getElementById('time')!;
 const render = () => {
   const now = new Date();
-  date.textContent = dateLine(now);
-  time.textContent = timeLine(now);
+  date.textContent = T.formatDate(now);
+  time.textContent = T.formatTime(now);
   document.body.classList.toggle('night', isNight(now));
   retune();
 };

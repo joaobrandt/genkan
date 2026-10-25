@@ -1,3 +1,5 @@
+import {T} from './i18n';
+
 // Minimal luna-service2 bridge. webOS injects window.PalmServiceBridge into every
 // web app; each call gets a fresh bridge whose single response arrives on
 // `onservicecallback`.
@@ -26,7 +28,7 @@ function call<T extends Reply = Reply>(
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const bridge = new Bridge();
-    const timer = setTimeout(() => reject(new Error('a TV não respondeu')), 4000);
+    const timer = setTimeout(() => reject(new Error(T.noAnswer)), 4000);
     bridge.onservicecallback = (msg) => {
       clearTimeout(timer);
       try {
@@ -56,7 +58,7 @@ export async function launchApp(id: string): Promise<void> {
   }
 
   const res = await call('luna://com.webos.applicationManager/launch', {id}, Bridge);
-  if (!res.returnValue) throw new Error(res.errorText || 'falha ao abrir');
+  if (!res.returnValue) throw new Error(res.errorText || T.openFailed);
 }
 
 /** App IDs of the inputs with a device that's on, from the TV's external input manager:

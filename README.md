@@ -1,12 +1,8 @@
-# genkan 玄関
+# Genkan 玄関
 
 An ad-free home screen for LG webOS TVs: no ads, no recommendation rows, no
 carousel of things you'll never watch. Just a night sky turning on true OLED
 black, calm music, the time and weather, and your inputs and apps in one row.
-
-*Genkan* is the entryway of a Japanese house — the first place you step into
-before any room — and 玄 also means "dark", which suits a screen that's mostly
-black.
 
 It runs as a sideloaded web app and takes over the **Home button** and **boot**,
 so the TV comes up straight into it. Everything lives inside the app package: it
@@ -18,45 +14,32 @@ edits no OS files, and a plain uninstall gives the TV back its own home.
   <img src="docs/navigation.gif" width="100%" alt="Moving along the row with the remote: the selected tile stays on the left and the row slides under it">
 </p>
 
-> Built and used on a rooted **LG webOS 24** TV (**Chromium 108**), with the
-> [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel).
-
 ---
 
-## What you get
+## Features
 
 - **A night sky** — stars, a Milky Way band with dust lanes, faint nebulae, a
   few distant galaxies and tonight's moon, drawn with WebGL at the panel's 4K
   and turning slowly, with twinkling stars and a shooting star every few
   seconds. The turn also keeps any one OLED pixel from staying lit for long.
-- **Calm music** — Holst's *Venus, the Bringer of Peace* looping underneath. It
-  pauses while another app is in front and fades back in when you return.
+- **Calm music** — [Holst's *Venus, the Bringer of Peace*](https://en.wikipedia.org/wiki/The_Planets#II._Venus,_the_Bringer_of_Peace)
+  looping underneath. It pauses while another app is in front and fades back in
+  when you return.
 - **Clock and weather** — date, time and the current weather in the top right
-  corner, from [Open-Meteo](https://open-meteo.com) (no account or key).
+  corner, from [Open-Meteo](https://open-meteo.com) (no account or key required).
 - **A PS4-style row** — HDMI inputs, apps and the TV's settings. Left and Right
   slide the row under the selected tile, which stays on the left; OK opens it.
   genkan starts on the tile opened last.
-- **Input dots** — a green dot on an input tile means the TV sees a device on at
-  that HDMI port (from the HDMI signal or HDMI-CEC).
 - **Screensaver** — after two minutes without input the clock, the row and the
   music fade away and only the sky keeps turning; the next key brings them back
   and does nothing else. The TV's own screensaver is vetoed, and after half an
   hour the panel switches off (the TV stays on) until any key lights it again.
+- **Input dots** — a green dot on an input tile means the TV sees a device on at
+  that HDMI port (from the HDMI signal or HDMI-CEC).
 - **Night mode** — from 22:00 to 06:00: dimmer text and tiles, the music at a
   third of its volume, and the screensaver after 45 seconds.
 - **Home button + boot** — HOME, BACK out of an app, and a cold boot or wake from
-  standby all land in genkan. See [How genkan becomes the home](#how-genkan-becomes-the-home).
-
-The date and weather are in Brazilian Portuguese.
-
-## Tech stack
-
-Vite + TypeScript, no framework, built for Chromium 108. The sky is made at
-build time by [`scripts/make-sky.mjs`](scripts/make-sky.mjs) from a fixed seed
-(textures for the Milky Way, nebulae and galaxies, and every star as data), so
-it's the same sky every time and the TV only has to draw it. A small Node
-service in the app package (written for the TV's Node 16) makes genkan the home.
-Packaged with the webOS `ares` CLI.
+  standby all land in genkan.
 
 ---
 
